@@ -1,7 +1,9 @@
 #ifndef LABA4_GENERATOR_H
 #define LABA4_GENERATOR_H
 
-#include "LABA_2/sequence.h"
+#include "../../LABA_2/sequence.h"
+#include <functional>
+
 // отвечает за то, как вычислить сл элемент
 // хранит состояние генерации, вычисляет следующий элемент, помнит контекст
 template<class T>

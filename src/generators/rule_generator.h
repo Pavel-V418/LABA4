@@ -1,19 +1,17 @@
 #ifndef LABA4_RULE_GENERATOR_H
 #define LABA4_RULE_GENERATOR_H
 
-#include <functional>
 #include "generator.h"
-#include "LABA_2/sequence.h"
+#include "../../LABA_2/sequence.h"
 
 // знает как вычислить сл элемент
 template<class T>
-class RuleGenerator : Generator<T> {
+class RuleGenerator : public Generator<T> {
 
 public:
     RuleGenerator(std::function<T(Sequence<T>*)> rule, Sequence<T>* materialized, bool infinite = true);
-
     T get_next() override;
-    bool has_next() override;
+    bool has_next() const override;
 
 private:
 
@@ -32,7 +30,7 @@ T RuleGenerator<T>::get_next() {
 }
 
 template<class T>
-bool RuleGenerator<T>::has_next() {
+bool RuleGenerator<T>::has_next() const{
     return infinite;
 }
 
