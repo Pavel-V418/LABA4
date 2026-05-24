@@ -8,8 +8,11 @@
 #include "generators/concat_generator.h"
 #include "generators/filter_generator.h"
 #include "generators/take_generator.h"
-//окошко, чтобы мы возвращались назад
+#include "generators/skip_generator.h"
+#include "generators/zip_generator.h"
+#include "utils/pair.h"
 
+//окошко, чтобы мы возвращались назад
 template<class T>
 class LazySequence : public Sequence<T> {
 
@@ -36,8 +39,13 @@ public:
     T reduce(std::function<T(const T&, const T&)> reducer,T initial);
 
     LazySequence<T>* take(int count);
+    LazySequence<T>* skip(int count);
 
     LazySequence<T>* concat(Sequence<T>* other);
+    LazySequence<T>* get_subsequence(int start,int end);
+
+    template<class T2>
+    LazySequence<Pair<T,T2>>* zip(Sequence<T2>* other);
 
     class LazyEnumerator : public IEnumerator<T> {
 
@@ -216,12 +224,81 @@ LazySequence<T>* LazySequence<T>::take(int count) {
 }
 
 template<class T>
+LazySequence<T>* LazySequence<T>::skip(int count) {
+    if(count < 0)
+        throw std::out_of_range("Negative skip count");
+
+    Generator<T>* gen = new SkipGenerator<T>(this,count);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    Cardinal new_length;
+
+    if(get_length().is_infinite())
+        new_length = Cardinal::infinity();
+
+    else{
+        int size = get_length().get_value();
+        int result = size - count;
+
+        if(result < 0)
+            result = 0;
+
+        new_length = Cardinal(result);
+    }
+
+    return new LazySequence<T>(gen,cache,new_length);
+}
+
+template<class T>
 LazySequence<T>* LazySequence<T>::concat(Sequence<T>* other) {
 
     Generator<T>* gen = new ConcatGenerator<T>(this,other);
     Sequence<T>* cache = new MutableArraySequence<T>();
 
     return new LazySequence<T>(gen,cache,get_length() + other->get_length());
+}
+
+template<class T>
+LazySequence<T>* LazySequence<T>::get_subsequence(int start, int end) {
+    if(start < 0 || end < start)
+        throw std::out_of_range("Invalid subsequence range");
+
+    return skip(start)->take(end - start + 1);
+}
+
+template<class T>
+template<class T2>
+LazySequence<Pair<T,T2>>* LazySequence<T>::zip(Sequence<T2>* other) {
+
+    Generator<Pair<T,T2>>* gen = new ZipGenerator<T,T2>(this, other);
+    Sequence<Pair<T,T2>>* cache = new MutableArraySequence<Pair<T,T2>>();
+
+    Cardinal new_length;
+
+    Cardinal first_length = this->get_length();
+    Cardinal second_length = other->get_length();
+
+    if(first_length.is_infinite() && second_length.is_infinite())
+        new_length = Cardinal::infinity();
+
+    else if(first_length.is_infinite())
+        new_length = second_length;
+
+    else if(second_length.is_infinite())
+        new_length = first_length;
+
+    else{
+        int minimum;
+
+        if (first_length.get_value() >= second_length.get_value())
+            minimum = second_length.get_value();
+        else
+            minimum = first_length.get_value();
+
+        new_length = Cardinal(minimum);
+    }
+
+    return new LazySequence<Pair<T,T2>>(gen,cache,new_length);
 }
 
 //private functions

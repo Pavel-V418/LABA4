@@ -13,4 +13,9 @@ add_executable(LABA4 src/main.cpp
         src/generators/concat_generator.h
         src/cardinal.h
         src/streams/read_only_stream.h
+        src/streams/istream.h
+        src/generators/skip_generator.h
+        src/utils/pair.h
+        src/generators/zip_generator.h
+        src/streams/write_only_stream.h
 )
