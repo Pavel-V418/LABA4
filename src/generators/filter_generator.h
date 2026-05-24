@@ -2,6 +2,7 @@
 #define LABA4_FILTER_GENERATOR_H
 
 #include "generator.h"
+
 template<class T>
 class FilterGenerator : public Generator<T> {
 
@@ -37,7 +38,10 @@ T FilterGenerator<T>::get_next() {
 
 template<class T>
 bool FilterGenerator<T>::has_next() const {
-    return true; // временно, пока не будет Cardinal
+    if(source->get_length().is_infinite())
+        return true;
+
+    return current_index < source->get_length().get_value();
 }
 
 #endif //LABA4_FILTER_GENERATOR_H

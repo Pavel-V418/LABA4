@@ -2,7 +2,7 @@
 #define LABA4_MAP_GENERATOR_H
 
 #include "generator.h"
-
+#include "../cardinal.h"
 template<class T>
 class MapGenerator : public Generator<T> { // строит посл-ть поверх старой (чтобы не вычислять всю посл-ть заранее)
 
@@ -36,7 +36,12 @@ T MapGenerator<T>::get_next() {
 
 template<class T>
 bool MapGenerator<T>::has_next() const {
-    return true;
+    Cardinal length = source->get_length();
+
+    if(length.is_infinite())
+        return true;
+
+    return current_index < length.get_value();
 }
 
 #endif //LABA4_MAP_GENERATOR_H

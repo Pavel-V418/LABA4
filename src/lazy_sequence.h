@@ -1,18 +1,21 @@
 #ifndef LABA4_LAZY_SEQUENCE_H
 #define LABA4_LAZY_SEQUENCE_H
 
-#include "LABA_2/sequence.h"
-#include "src/generators/generator.h"
-#include "src/generators/map_generator.h"
-#include "LABA_2/mutableArraySequence.h"
-#include "src/generators/filter_generator.h"
+#include "../LABA_2/sequence.h"
+#include "generators/generator.h"
+#include "generators/map_generator.h"
+#include "../LABA_2/mutableArraySequence.h"
+#include "generators/concat_generator.h"
+#include "generators/filter_generator.h"
+#include "generators/take_generator.h"
+//окошко, чтобы мы возвращались назад
 
 template<class T>
 class LazySequence : public Sequence<T> {
 
 public:
     LazySequence();
-    LazySequence(Generator<T>* generator, Sequence<T>* init_seq, bool infinite = true);
+    LazySequence(Generator<T> *generator, Sequence<T> *init_seq, const Cardinal& length);
 
     ~LazySequence() override;
 
@@ -20,7 +23,7 @@ public:
     const T& get_first() override;
     const T& get_last() override;
 
-    int get_length() const override;
+    Cardinal get_length() const override;
     int get_materialized_count() const;
 
     IEnumerator<T>* get_enumerator() const override;
@@ -30,6 +33,11 @@ public:
 
     LazySequence<T>* map(std::function<T(const T&)> transform);
     LazySequence<T>* where(std::function<bool(const T&)> predicate);
+    T reduce(std::function<T(const T&, const T&)> reducer,T initial);
+
+    LazySequence<T>* take(int count);
+
+    LazySequence<T>* concat(Sequence<T>* other);
 
     class LazyEnumerator : public IEnumerator<T> {
 
@@ -42,10 +50,13 @@ public:
             : sequence(sequence), current_index(0) {}
 
         bool has_more_elements() override {
-            if(sequence->infinite)
+
+            Cardinal length = sequence->get_length();
+
+            if(length.is_infinite())
                 return true;
 
-            return current_index < sequence->get_length();
+            return current_index < length.get_value();
         }
 
         const T& next() override{
@@ -63,19 +74,18 @@ protected:
 private:
     Sequence<T>* materialized;
     Generator<T>* generator;
-    bool infinite;
+    Cardinal length;
 
     static void check_range(int index);
-    void check_infinite() const;
 };
 
 template<class T>
 LazySequence<T>::LazySequence()
-    : materialized(nullptr), generator(nullptr), infinite(false) {}
+    : materialized(nullptr), generator(nullptr) {}
 
 template<class T>
-LazySequence<T>::LazySequence(Generator<T> *generator, Sequence<T> *init_seq, bool infinite)
-    : materialized(init_seq), generator(generator), infinite(infinite) {}
+LazySequence<T>::LazySequence(Generator<T> *generator, Sequence<T> *init_seq, const Cardinal& length)
+    : materialized(init_seq), generator(generator), length(length) {}
 
 template<class T>
 LazySequence<T>::~LazySequence() {
@@ -87,7 +97,7 @@ template<class T>
 const T& LazySequence<T>::get(int index) { // материализацию элементов по требованию
     check_range(index);
 
-    while (materialized->get_length() <= index) { // пока нужно элемента нет в cache - генерируй его
+    while (materialized->get_length().get_value() <= index) { // пока нужно элемента нет в cache - генерируй его
 
         if (!generator->has_next())
             throw std::out_of_range("Index out of range");
@@ -107,22 +117,20 @@ const T& LazySequence<T>::get_first() {
 
 template<class T>
 const T &LazySequence<T>::get_last() {
-    check_infinite();
+    if(length.is_infinite())
+        throw std::logic_error("Infinite sequence has no last element");
 
-    return materialized->get_last();
+    return get(length.get_value() - 1);
 }
 
 template<class T>
-int LazySequence<T>::get_length() const{
-    check_infinite();
-    
-    return materialized->get_length();
+Cardinal LazySequence<T>::get_length() const{
+    return length;
 }
 
 template<class T>
 int LazySequence<T>::get_materialized_count() const {
-
-    return materialized->get_length();
+    return materialized->get_length().get_value();
 }
 
 template<class T>
@@ -168,7 +176,7 @@ LazySequence<T>* LazySequence<T>::map(std::function<T(const T&)> transform) {
 
     auto* cache = new MutableArraySequence<T>();
 
-    return new LazySequence<T>(gen,cache,infinite);
+    return new LazySequence<T>(gen,cache,get_length());
 }
 
 template<class T>
@@ -178,7 +186,42 @@ LazySequence<T>* LazySequence<T>::where(std::function<bool(const T&)> predicate)
 
     Sequence<T>* cache = new MutableArraySequence<T>();
 
-    return new LazySequence<T>(gen,cache,infinite);
+    return new LazySequence<T>(gen,cache,Cardinal::infinity());
+}
+
+template<class T>
+T LazySequence<T>::reduce(std::function<T(const T&, const T&)> reducer,T initial) {
+
+    T result = initial;
+
+    IEnumerator<T>* enumerator = get_enumerator();
+
+    while(enumerator->has_more_elements())
+        result = reducer(result,enumerator->next());
+
+    delete enumerator;
+
+    return result;
+}
+
+template<class T>
+LazySequence<T>* LazySequence<T>::take(int count) {
+    if(count < 0)
+        throw std::out_of_range("Negative take count");
+
+    Generator<T>* gen = new TakeGenerator<T>(this,count);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    return new LazySequence<T>(gen,cache,Cardinal(count));
+}
+
+template<class T>
+LazySequence<T>* LazySequence<T>::concat(Sequence<T>* other) {
+
+    Generator<T>* gen = new ConcatGenerator<T>(this,other);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    return new LazySequence<T>(gen,cache,get_length() + other->get_length());
 }
 
 //private functions
@@ -188,10 +231,5 @@ void LazySequence<T>::check_range(int index) {
         throw std::out_of_range("Index out of range");
 }
 
-template<class T>
-void LazySequence<T>::check_infinite() const {
-    if (infinite)
-        throw std::logic_error("Infinite sequence has no last element");
-}
 
 #endif //LABA4_LAZY_SEQUENCE_H
