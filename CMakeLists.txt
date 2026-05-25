@@ -12,10 +12,16 @@ add_executable(LABA4 src/main.cpp
         src/generators/take_generator.h
         src/generators/concat_generator.h
         src/cardinal.h
-        src/streams/read_only_stream.h
+        src/streams/sequence_input_stream.h
         src/streams/istream.h
         src/generators/skip_generator.h
         src/utils/pair.h
         src/generators/zip_generator.h
-        src/streams/write_only_stream.h
+        src/streams/sequence_output_stream.h
+        src/streams/input_stream.h
+        src/streams/output_stream.h
+        src/streams/file_input_stream.h
+        src/streams/file_output_stream.h
+        src/streams/string_input_stream.h
+        src/streams/string_output_stream.h
 )

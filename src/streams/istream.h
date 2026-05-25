@@ -5,7 +5,6 @@ template<class T>
 class IStream {
 
 public:
-
     virtual ~IStream() = default;
 
     virtual void open() = 0;

@@ -2,10 +2,10 @@
 #define LABA4_WRITE_ONLY_STREAM_H
 
 #include "../../LABA_2/sequence.h"
-#include "istream.h"
+#include "output_stream.h"
 
 template<class T>
-class WriteOnlyStream : public IStream<T>{
+class SequenceOutputStream : public OutputStream<T>{
 
 private:
     Sequence<T>* target; // куда пишем элементы
@@ -15,7 +15,7 @@ private:
 
 public:
 
-    WriteOnlyStream(Sequence<T>* target);
+    SequenceOutputStream(Sequence<T>* target);
 
     void open() override;
     void close() override;
@@ -24,35 +24,35 @@ public:
 
     int get_position() const override;
 
-    void write(const T& item);
+    void write(const T& item) override;
 };
 
 template<class T>
-WriteOnlyStream<T>::WriteOnlyStream(Sequence<T>* target)
+SequenceOutputStream<T>::SequenceOutputStream(Sequence<T>* target)
     : target(target), position(0), opened(false) {}
 
 template<class T>
-void WriteOnlyStream<T>::open() {
+void SequenceOutputStream<T>::open() {
     opened = true;
 }
 
 template<class T>
-void WriteOnlyStream<T>::close() {
+void SequenceOutputStream<T>::close() {
     opened = false;
 }
 
 template<class T>
-bool WriteOnlyStream<T>::is_open() const {
+bool SequenceOutputStream<T>::is_open() const {
     return opened;
 }
 
 template<class T>
-int WriteOnlyStream<T>::get_position() const {
+int SequenceOutputStream<T>::get_position() const {
     return position;
 }
 
 template<class T>
-void WriteOnlyStream<T>::write(const T& item) {
+void SequenceOutputStream<T>::write(const T& item) {
     if(!opened)
         throw std::logic_error("Stream is closed");
 

@@ -308,5 +308,4 @@ void LazySequence<T>::check_range(int index) {
         throw std::out_of_range("Index out of range");
 }
 
-
 #endif //LABA4_LAZY_SEQUENCE_H

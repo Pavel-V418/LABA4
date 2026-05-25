@@ -1,6 +1,13 @@
 #include <iostream>
 #include "generators/rule_generator.h"
 #include "lazy_sequence.h"
+#include "streams/sequence_input_stream.h"
+#include "streams/sequence_output_stream.h"
+#include "streams/file_input_stream.h"
+#include "streams/file_output_stream.h"
+#include "streams/string_input_stream.h"
+#include "streams/string_output_stream.h"
+#include "../LABA_2/mutableArraySequence.h"
 
 int main() {
 
@@ -25,20 +32,12 @@ int main() {
     /*=================== FIBONACCI ======================*/
     /*====================================================*/
 
-    Sequence<int>* cache =
-        new MutableArraySequence<int>();
+    Sequence<int>* cache = new MutableArraySequence<int>();
 
-    Generator<int>* fib_generator = new RuleGenerator<int>(
-            fib_rule,
-            cache,
-            true
-        );
+    Generator<int>* fib_generator = new RuleGenerator<int>(fib_rule, cache,true);
 
     LazySequence<int> fib(fib_generator,cache,Cardinal::infinity());
 
-    /*====================================================*/
-    /*==================== BASIC TEST ====================*/
-    /*====================================================*/
 
     std::cout << "========== BASIC TEST ==========" << std::endl;
 
@@ -223,9 +222,6 @@ int main() {
 
     std::cout << std::endl;
 
-    /*====================================================*/
-    /*====================== CLEANUP =====================*/
-    /*====================================================*/
 
     delete doubled;
 
@@ -236,6 +232,214 @@ int main() {
     delete even_take;
 
     delete concat_seq;
+
+    /*================================================*/
+    /*============== STRING INPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== STRING INPUT TEST =========="
+        << std::endl;
+
+    StringInputStream string_input(
+        "Hello"
+    );
+
+    string_input.open();
+
+    while(
+        !string_input.is_end_of_stream()
+    )
+    {
+        std::cout
+            << string_input.read();
+    }
+
+    std::cout << std::endl;
+
+    string_input.close();
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*============= STRING OUTPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== STRING OUTPUT TEST =========="
+        << std::endl;
+
+    StringOutputStream string_output;
+
+    string_output.open();
+
+    string_output.write('H');
+    string_output.write('i');
+    string_output.write('!');
+
+    std::cout
+        << string_output.get_string()
+        << std::endl;
+
+    std::cout
+        << "POSITION: "
+        << string_output.get_position()
+        << std::endl;
+
+    string_output.close();
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*=============== FILE OUTPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== FILE OUTPUT TEST =========="
+        << std::endl;
+
+    FileOutputStream file_output(
+        "test.txt"
+    );
+
+    file_output.open();
+
+    file_output.write('A');
+    file_output.write('B');
+    file_output.write('C');
+
+    file_output.close();
+
+    std::cout
+        << "Written to file test.txt"
+        << std::endl;
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*================ FILE INPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== FILE INPUT TEST =========="
+        << std::endl;
+
+    FileInputStream file_input(
+        "test.txt"
+    );
+
+    file_input.open();
+
+    try
+    {
+        while(true)
+        {
+            std::cout
+                << file_input.read();
+        }
+    }
+    catch(const std::out_of_range&)
+    {
+    }
+
+    std::cout << std::endl;
+
+    file_input.close();
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*================= SEEK TEST ====================*/
+    /*================================================*/
+
+    std::cout
+        << "========== SEEK TEST =========="
+        << std::endl;
+
+    StringInputStream seek_stream(
+        "abcdef"
+    );
+
+    seek_stream.open();
+
+    seek_stream.seek(3);
+
+    std::cout
+        << seek_stream.read()
+        << std::endl;
+
+    seek_stream.close();
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*=========== SEQUENCE OUTPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== SEQUENCE OUTPUT TEST =========="
+        << std::endl;
+
+    auto* sequence =
+        new MutableArraySequence<char>();
+
+    SequenceOutputStream<char>
+        sequence_output(sequence);
+
+    sequence_output.open();
+
+    sequence_output.write('X');
+    sequence_output.write('Y');
+    sequence_output.write('Z');
+
+    sequence_output.close();
+
+    for(
+        int i = 0;
+        i < sequence->get_length().get_value();
+        i++
+    )
+    {
+        std::cout
+            << sequence->get(i);
+    }
+
+    std::cout << std::endl;
+
+    std::cout << std::endl;
+
+
+    /*================================================*/
+    /*============ SEQUENCE INPUT TEST ===============*/
+    /*================================================*/
+
+    std::cout
+        << "========== SEQUENCE INPUT TEST =========="
+        << std::endl;
+
+    SequenceInputStream<char>
+        sequence_input(sequence);
+
+    sequence_input.open();
+
+    while(
+        !sequence_input.is_end_of_stream()
+    )
+    {
+        std::cout
+            << sequence_input.read();
+    }
+
+    std::cout << std::endl;
+
+    sequence_input.close();
+
+    delete sequence;
 
     return 0;
 }

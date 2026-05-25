@@ -2,10 +2,10 @@
 #define LABA4_READ_ONLY_STREAM_H
 
 #include "../../LABA_2/sequence.h"
-#include "../streams/istream.h"
+#include "../streams/input_stream.h"
 
 template<class T>
-class ReadOnlyStream : public IStream<T>{
+class SequenceInputStream : public InputStream<T>{
 
 private:
     Sequence<T>* source; //источник данных stream
@@ -14,13 +14,13 @@ private:
 
 public:
 
-    ReadOnlyStream(Sequence<T>* source);
+    SequenceInputStream(Sequence<T>* source);
 
     void open() override;
     void close() override;
 
     bool is_open() const override;
-    bool is_end_of_stream() const;
+    bool is_end_of_stream() const override;
 
     bool can_seek() const override; // возможность перепрыгнуть в другое место stream
     bool can_go_back() const override;
@@ -28,30 +28,30 @@ public:
     int get_position() const override;
 
     void seek(int new_position) override;
-    const T& read();
+    const T& read() override;
 };
 
 template<class T>
-ReadOnlyStream<T>::ReadOnlyStream(Sequence<T>* source)
+SequenceInputStream<T>::SequenceInputStream(Sequence<T>* source)
     : source(source), position(0), opened(false) {}
 
 template<class T>
-void ReadOnlyStream<T>::open() {
+void SequenceInputStream<T>::open() {
     opened = true;
 }
 
 template<class T>
-void ReadOnlyStream<T>::close() {
+void SequenceInputStream<T>::close() {
     opened = false;
 }
 
 template<class T>
-bool ReadOnlyStream<T>::is_open() const {
+bool SequenceInputStream<T>::is_open() const {
     return opened;
 }
 
 template<class T>
-bool ReadOnlyStream<T>::is_end_of_stream() const {
+bool SequenceInputStream<T>::is_end_of_stream() const {
 
     Cardinal length = source->get_length();
 
@@ -62,22 +62,22 @@ bool ReadOnlyStream<T>::is_end_of_stream() const {
 }
 
 template<class T>
-bool ReadOnlyStream<T>::can_seek() const {
+bool SequenceInputStream<T>::can_seek() const {
     return true;
 }
 
 template<class T>
-bool ReadOnlyStream<T>::can_go_back() const {
+bool SequenceInputStream<T>::can_go_back() const {
     return true;
 }
 
 template<class T>
-int ReadOnlyStream<T>::get_position() const {
+int SequenceInputStream<T>::get_position() const {
     return position;
 }
 
 template<class T>
-void ReadOnlyStream<T>::seek(int new_position) {
+void SequenceInputStream<T>::seek(int new_position) {
     if(new_position < 0)
         throw std::out_of_range("Negative stream position");
 
@@ -90,7 +90,7 @@ void ReadOnlyStream<T>::seek(int new_position) {
 }
 
 template<class T>
-const T& ReadOnlyStream<T>::read() {
+const T& SequenceInputStream<T>::read() {
     if(!opened)
         throw std::logic_error("Stream is closed");
 
