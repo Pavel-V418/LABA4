@@ -1,0 +1,64 @@
+#ifndef LABA4_INSERT_GENERATOR_H
+#define LABA4_INSERT_GENERATOR_H
+
+#include "generator.h"
+
+template<class T>
+class InsertAtGenerator : public Generator<T> {
+
+private:
+    Sequence<T>* source;
+
+    T inserted_item;
+
+    int insert_index;
+    int current_index;
+
+public:
+
+    InsertAtGenerator(Sequence<T>* source, const T& item, int insert_index);
+
+    T get_next() override;
+
+    bool has_next() const override;
+};
+
+template<class T>
+InsertAtGenerator<T>::InsertAtGenerator(Sequence<T>* source,const T& item,int insert_index)
+    : source(source),
+      inserted_item(item),
+      insert_index(insert_index),
+      current_index(0) {}
+
+template<class T>
+T InsertAtGenerator<T>::get_next() {
+    if(current_index == insert_index){
+        current_index++;
+
+        return inserted_item;
+    }
+
+    int source_index;
+
+    if(current_index < insert_index)
+        source_index = current_index;
+
+    else
+        source_index = current_index - 1;
+
+    current_index++;
+
+    return source->get(source_index);
+}
+
+template<class T>
+bool InsertAtGenerator<T>::has_next() const {
+    Cardinal length = source->get_length();
+
+    if(length.is_infinite())
+        return true;
+
+    return current_index <= length.get_value();
+}
+
+#endif //LABA4_INSERT_GENERATOR_H

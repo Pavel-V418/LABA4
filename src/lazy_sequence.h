@@ -10,6 +10,9 @@
 #include "generators/take_generator.h"
 #include "generators/skip_generator.h"
 #include "generators/zip_generator.h"
+#include "generators/append_generator.h"
+#include "generators/insert_at_generator.h"
+#include "generators/prepend_generator.h"
 #include "utils/pair.h"
 
 //окошко, чтобы мы возвращались назад
@@ -43,6 +46,11 @@ public:
 
     LazySequence<T>* concat(Sequence<T>* other);
     LazySequence<T>* get_subsequence(int start,int end);
+
+    LazySequence<T>* append(const T& item) override;
+    LazySequence<T>* prepend(const T& item);
+    LazySequence<T>* insert_at(const T& item, int index);
+    //LazySequence<T>* remove_at(int index);
 
     template<class T2>
     LazySequence<Pair<T,T2>>* zip(Sequence<T2>* other);
@@ -156,25 +164,80 @@ Sequence<T>* LazySequence<T>::create_empty_sequence() const {
     return new MutableArraySequence<T>();
 }
 
-// internal methods
 template<class T>
-void LazySequence<T>::append_internal(const T& item) {
-    materialized = materialized->append(item);
+LazySequence<T>* LazySequence<T>::append(const T& item) {
+
+    Generator<T>* gen = new AppendGenerator<T>(this,item);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    Cardinal new_length;
+
+    if(length.is_infinite())
+        new_length = Cardinal::infinity();
+    else
+        new_length = Cardinal(length.get_value() + 1);
+
+    return new LazySequence<T>(gen,cache,new_length);
+}
+
+template<class T>
+LazySequence<T>*
+LazySequence<T>::prepend(const T& item) {
+    Generator<T>* gen = new PrependGenerator<T>(this, item);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    Cardinal new_length;
+
+    if(length.is_infinite())
+        new_length = Cardinal::infinity();
+
+    else
+        new_length = Cardinal(length.get_value() + 1);
+
+    return new LazySequence<T>(gen, cache, new_length);
+}
+
+template<class T>
+LazySequence<T>*
+LazySequence<T>::insert_at(const T& item,int index) {
+    if(index < 0)
+        throw std::out_of_range("Negative insert index");
+
+    if(!length.is_infinite() && index > length.get_value())
+        throw std::out_of_range("Insert index out of range");
+
+    Generator<T>* gen = new InsertAtGenerator<T>(this, item, index);
+    Sequence<T>* cache = new MutableArraySequence<T>();
+
+    Cardinal new_length;
+
+    if(length.is_infinite())
+        new_length = Cardinal::infinity();
+
+    else
+        new_length = Cardinal(length.get_value() + 1);
+
+    return new LazySequence<T>(gen, cache, new_length);
+}
+
+template<class T>
+void LazySequence<T>::append_internal(const T&) {
+    throw std::logic_error("append_internal is not supported for LazySequence");
 }
 
 template<class T>
 void LazySequence<T>::prepend_internal(const T& item) {
-    materialized = materialized->prepend(item);
+    throw std::logic_error("prepend_internal is not supported for LazySequence");
 }
 
 template<class T>
 void LazySequence<T>::insert_at_internal(const T& item,int index) {
-    materialized = materialized->insert_at(item, index);
+    throw std::logic_error("prepend_internal is not supported for LazySequence");
 }
 
 template<class T>
 void LazySequence<T>::remove_at_internal(int index) {
-    materialized = materialized->remove_at(index);
+    throw std::logic_error("prepend_internal is not supported for LazySequence");
 }
 
 template<class T>

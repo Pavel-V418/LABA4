@@ -24,4 +24,7 @@ add_executable(LABA4 src/main.cpp
         src/streams/file_output_stream.h
         src/streams/string_input_stream.h
         src/streams/string_output_stream.h
+        src/generators/append_generator.h
+        src/generators/prepend_generator.h
+        src/generators/insert_at_generator.h
 )
