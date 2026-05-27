@@ -1,6 +1,8 @@
 #ifndef LABA4_LAZY_SEQUENCE_H
 #define LABA4_LAZY_SEQUENCE_H
 
+#include <functional>
+#include "sliding_cache.h"
 #include "../LABA_2/sequence.h"
 #include "generators/generator.h"
 #include "generators/map_generator.h"
@@ -21,11 +23,11 @@ class LazySequence : public Sequence<T> {
 
 public:
     LazySequence();
-    LazySequence(Generator<T> *generator, Sequence<T> *init_seq, const Cardinal& length);
+    LazySequence(std::function<Generator<T>*()> generator_factory, const Cardinal& length, int window_size);
 
     ~LazySequence() override;
 
-    const T& get(int index);
+    const T& get(int index) override;
     const T& get_first() override;
     const T& get_last() override;
 
@@ -48,8 +50,8 @@ public:
     LazySequence<T>* get_subsequence(int start,int end);
 
     LazySequence<T>* append(const T& item) override;
-    LazySequence<T>* prepend(const T& item);
-    LazySequence<T>* insert_at(const T& item, int index);
+    LazySequence<T>* prepend(const T& item) override;
+    LazySequence<T>* insert_at(const T& item, int index) override;
     //LazySequence<T>* remove_at(int index);
 
     template<class T2>
@@ -88,42 +90,63 @@ protected:
     void remove_at_internal(int index) override;
 
 private:
-    Sequence<T>* materialized;
+    SlidingCache<T>* cache; // плавающее окно последних материализованных элементов
     Generator<T>* generator;
     Cardinal length;
 
-    static void check_range(int index);
+    int window_size;
+    int current_position; // до какого логического элемента мы догенерировали sequence
+    std::function<Generator<T>*()> generator_factory; // создает генератор заново (1000->5)
+
+    void check_range(int index) const;
 };
 
 template<class T>
 LazySequence<T>::LazySequence()
-    : materialized(nullptr), generator(nullptr) {}
+    : cache(new SlidingCache<T>(100)), generator(nullptr), generator_factory(nullptr), current_position(-1),//поч -1
+      length(Cardinal::infinity()),window_size(100)
+{}
 
 template<class T>
-LazySequence<T>::LazySequence(Generator<T> *generator, Sequence<T> *init_seq, const Cardinal& length)
-    : materialized(init_seq), generator(generator), length(length) {}
+LazySequence<T>::LazySequence(std::function<Generator<T>*()> generator_factory,const Cardinal& length,int window_size)
+    : cache(new SlidingCache<T>(window_size)), generator_factory(generator_factory),generator(generator_factory()),
+      current_position(-1),length(length),window_size(window_size) {}
 
 template<class T>
 LazySequence<T>::~LazySequence() {
     delete generator;
-    delete materialized;
+    delete cache;
 }
 
 template<class T>
-const T& LazySequence<T>::get(int index) { // материализацию элементов по требованию
+const T&
+LazySequence<T>::get(int index) {
     check_range(index);
 
-    while (materialized->get_length().get_value() <= index) { // пока нужно элемента нет в cache - генерируй его
+    if(cache->contains(index))
+        return cache->get(index);
+    
+    if(index < current_position){
+        cache->clear();
 
-        if (!generator->has_next())
+        delete generator;
+
+        generator = generator_factory();
+        current_position = -1;
+    }
+
+    while(current_position < index){
+        if(!generator || !generator->has_next())
             throw std::out_of_range("Index out of range");
 
         T next = generator->get_next();
 
-        materialized = materialized->append(next);
+        cache->push(next, current_position + 1);
+
+        current_position++;
     }
 
-    return materialized->get(index);
+    return cache->get(index);
 }
 
 template<class T>
@@ -146,7 +169,7 @@ Cardinal LazySequence<T>::get_length() const{
 
 template<class T>
 int LazySequence<T>::get_materialized_count() const {
-    return materialized->get_length().get_value();
+    return cache->get_count();
 }
 
 template<class T>
@@ -167,24 +190,9 @@ Sequence<T>* LazySequence<T>::create_empty_sequence() const {
 template<class T>
 LazySequence<T>* LazySequence<T>::append(const T& item) {
 
-    Generator<T>* gen = new AppendGenerator<T>(this,item);
-    Sequence<T>* cache = new MutableArraySequence<T>();
-
-    Cardinal new_length;
-
-    if(length.is_infinite())
-        new_length = Cardinal::infinity();
-    else
-        new_length = Cardinal(length.get_value() + 1);
-
-    return new LazySequence<T>(gen,cache,new_length);
-}
-
-template<class T>
-LazySequence<T>*
-LazySequence<T>::prepend(const T& item) {
-    Generator<T>* gen = new PrependGenerator<T>(this, item);
-    Sequence<T>* cache = new MutableArraySequence<T>();
+    auto factory = [this, item]() { // функция по созданию генератора
+        return new AppendGenerator<T>(this,item);
+    };
 
     Cardinal new_length;
 
@@ -194,20 +202,37 @@ LazySequence<T>::prepend(const T& item) {
     else
         new_length = Cardinal(length.get_value() + 1);
 
-    return new LazySequence<T>(gen, cache, new_length);
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
-LazySequence<T>*
-LazySequence<T>::insert_at(const T& item,int index) {
+LazySequence<T>* LazySequence<T>::prepend(const T& item) {
+    auto factory =[this, item]() {
+        return new PrependGenerator<T>(this,item);
+    };
+
+    Cardinal new_length;
+
+    if(length.is_infinite())
+        new_length = Cardinal::infinity();
+
+    else
+        new_length = Cardinal(length.get_value() + 1);
+
+    return new LazySequence<T>(factory,new_length,window_size);
+}
+
+template<class T>
+LazySequence<T>* LazySequence<T>::insert_at(const T& item,int index) {
     if(index < 0)
         throw std::out_of_range("Negative insert index");
 
     if(!length.is_infinite() && index > length.get_value())
         throw std::out_of_range("Insert index out of range");
 
-    Generator<T>* gen = new InsertAtGenerator<T>(this, item, index);
-    Sequence<T>* cache = new MutableArraySequence<T>();
+    auto factory =[this, item, index]() {
+        return new InsertAtGenerator<T>(this, item, index);
+    };
 
     Cardinal new_length;
 
@@ -217,7 +242,7 @@ LazySequence<T>::insert_at(const T& item,int index) {
     else
         new_length = Cardinal(length.get_value() + 1);
 
-    return new LazySequence<T>(gen, cache, new_length);
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
@@ -242,27 +267,24 @@ void LazySequence<T>::remove_at_internal(int index) {
 
 template<class T>
 LazySequence<T>* LazySequence<T>::map(std::function<T(const T&)> transform) {
+    auto factory =[this, transform]() {
+        return new MapGenerator<T>(this,transform);
+    };
 
-    Generator<T>* gen = new MapGenerator<T>(this,transform);
-
-    auto* cache = new MutableArraySequence<T>();
-
-    return new LazySequence<T>(gen,cache,get_length());
+    return new LazySequence<T>(factory,get_length(),window_size);
 }
 
 template<class T>
 LazySequence<T>* LazySequence<T>::where(std::function<bool(const T&)> predicate) {
+    auto factory = [this, predicate]() {
+        return new FilterGenerator<T>(this, predicate);
+    };
 
-    Generator<T>* gen = new FilterGenerator<T>(this,predicate);
-
-    Sequence<T>* cache = new MutableArraySequence<T>();
-
-    return new LazySequence<T>(gen,cache,Cardinal::infinity());
+    return new LazySequence<T>(factory, Cardinal::infinity(), window_size);
 }
 
 template<class T>
 T LazySequence<T>::reduce(std::function<T(const T&, const T&)> reducer,T initial) {
-
     T result = initial;
 
     IEnumerator<T>* enumerator = get_enumerator();
@@ -276,14 +298,16 @@ T LazySequence<T>::reduce(std::function<T(const T&, const T&)> reducer,T initial
 }
 
 template<class T>
-LazySequence<T>* LazySequence<T>::take(int count) {
+LazySequence<T>*
+LazySequence<T>::take(int count) {
     if(count < 0)
         throw std::out_of_range("Negative take count");
 
-    Generator<T>* gen = new TakeGenerator<T>(this,count);
-    Sequence<T>* cache = new MutableArraySequence<T>();
+    auto factory = [this, count]() {
+        return new TakeGenerator<T>(this,count);
+    };
 
-    return new LazySequence<T>(gen,cache,Cardinal(count));
+    return new LazySequence<T>(factory,Cardinal(count),window_size);
 }
 
 template<class T>
@@ -291,17 +315,17 @@ LazySequence<T>* LazySequence<T>::skip(int count) {
     if(count < 0)
         throw std::out_of_range("Negative skip count");
 
-    Generator<T>* gen = new SkipGenerator<T>(this,count);
-    Sequence<T>* cache = new MutableArraySequence<T>();
+    auto factory =[this, count]() {
+        return new SkipGenerator<T>(this,count);
+    };
 
     Cardinal new_length;
 
-    if(get_length().is_infinite())
+    if(length.is_infinite())
         new_length = Cardinal::infinity();
 
     else{
-        int size = get_length().get_value();
-        int result = size - count;
+        int result = length.get_value() - count;
 
         if(result < 0)
             result = 0;
@@ -309,16 +333,16 @@ LazySequence<T>* LazySequence<T>::skip(int count) {
         new_length = Cardinal(result);
     }
 
-    return new LazySequence<T>(gen,cache,new_length);
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
 LazySequence<T>* LazySequence<T>::concat(Sequence<T>* other) {
+    auto factory =[this, other]() {
+        return new ConcatGenerator<T>(this,other);
+    };
 
-    Generator<T>* gen = new ConcatGenerator<T>(this,other);
-    Sequence<T>* cache = new MutableArraySequence<T>();
-
-    return new LazySequence<T>(gen,cache,get_length() + other->get_length());
+    return new LazySequence<T>(factory, get_length() + other->get_length(), window_size);
 }
 
 template<class T>
@@ -332,42 +356,49 @@ LazySequence<T>* LazySequence<T>::get_subsequence(int start, int end) {
 template<class T>
 template<class T2>
 LazySequence<Pair<T,T2>>* LazySequence<T>::zip(Sequence<T2>* other) {
-
-    Generator<Pair<T,T2>>* gen = new ZipGenerator<T,T2>(this, other);
-    Sequence<Pair<T,T2>>* cache = new MutableArraySequence<Pair<T,T2>>();
+    auto factory = [this, other]() {
+        return new ZipGenerator<T,T2>(this,other);
+    };
 
     Cardinal new_length;
 
-    Cardinal first_length = this->get_length();
-    Cardinal second_length = other->get_length();
+    Cardinal first = this->get_length();
 
-    if(first_length.is_infinite() && second_length.is_infinite())
+    Cardinal second = other->get_length();
+
+    if(first.is_infinite() && second.is_infinite())
         new_length = Cardinal::infinity();
 
-    else if(first_length.is_infinite())
-        new_length = second_length;
+    else if(first.is_infinite())
 
-    else if(second_length.is_infinite())
-        new_length = first_length;
+        new_length = second;
+
+    else if(second.is_infinite())
+
+        new_length = first;
 
     else{
         int minimum;
 
-        if (first_length.get_value() >= second_length.get_value())
-            minimum = second_length.get_value();
+        if(first.get_value() < second.get_value())
+            minimum = first.get_value();
+
         else
-            minimum = first_length.get_value();
+            minimum = second.get_value();
 
         new_length = Cardinal(minimum);
     }
 
-    return new LazySequence<Pair<T,T2>>(gen,cache,new_length);
+    return new LazySequence<Pair<T,T2>>(factory, new_length, window_size);
 }
 
 //private functions
 template<class T>
-void LazySequence<T>::check_range(int index) {
-    if (index < 0)
+void LazySequence<T>::check_range(int index) const {
+    if(index < 0)
+        throw std::out_of_range("Index out of range");
+
+    if(!length.is_infinite() && index >= length.get_value())
         throw std::out_of_range("Index out of range");
 }
 

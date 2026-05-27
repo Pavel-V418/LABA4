@@ -27,4 +27,6 @@ add_executable(LABA4 src/main.cpp
         src/generators/append_generator.h
         src/generators/prepend_generator.h
         src/generators/insert_at_generator.h
+        src/sliding_cache.h
+        src/online_statistic.h
 )

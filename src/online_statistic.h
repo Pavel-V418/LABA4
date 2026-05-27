@@ -1,0 +1,8 @@
+//
+// Created by Павел on 27.05.2026.
+//
+
+#ifndef LABA4_ONLINE_STATISTIC_H
+#define LABA4_ONLINE_STATISTIC_H
+
+#endif //LABA4_ONLINE_STATISTIC_H
