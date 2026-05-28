@@ -1,7 +1,7 @@
 #ifndef LABA4_SLIDING_CACHE_H
 #define LABA4_SLIDING_CACHE_H
 
-#include "../LABA_2/dynamicArray.h"
+#include "../../LABA_2/dynamicArray.h"
 #include <stdexcept>
 
 template<class T>

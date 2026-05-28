@@ -3,23 +3,34 @@
 
 #include <functional>
 #include "sliding_cache.h"
-#include "../LABA_2/sequence.h"
-#include "generators/generator.h"
-#include "generators/map_generator.h"
-#include "../LABA_2/mutableArraySequence.h"
-#include "generators/concat_generator.h"
-#include "generators/filter_generator.h"
-#include "generators/take_generator.h"
-#include "generators/skip_generator.h"
-#include "generators/zip_generator.h"
-#include "generators/append_generator.h"
-#include "generators/insert_at_generator.h"
-#include "generators/prepend_generator.h"
-#include "utils/pair.h"
+#include "../../LABA_2/sequence.h"
+#include "../generators/generator.h"
+#include "../generators/map_generator.h"
+#include "../../LABA_2/mutableArraySequence.h"
+#include "../generators/concat_generator.h"
+#include "../generators/filter_generator.h"
+#include "../generators/take_generator.h"
+#include "../generators/skip_generator.h"
+#include "../generators/zip_generator.h"
+#include "../generators/append_generator.h"
+#include "../generators/insert_at_generator.h"
+#include "../generators/prepend_generator.h"
+#include "../utils/pair.h"
 
 //окошко, чтобы мы возвращались назад
 template<class T>
 class LazySequence : public Sequence<T> {
+
+private:
+    SlidingCache<T>* cache; // плавающее окно последних материализованных элементов
+    Generator<T>* generator;
+    Cardinal length;
+
+    int window_size;
+    int current_position; // до какого логического элемента мы догенерировали sequence
+    std::function<Generator<T>*()> generator_factory; // создает генератор заново (1000->5)
+
+    void check_range(int index) const;
 
 public:
     LazySequence();
@@ -89,16 +100,6 @@ protected:
     void insert_at_internal(const T& item,int index) override;
     void remove_at_internal(int index) override;
 
-private:
-    SlidingCache<T>* cache; // плавающее окно последних материализованных элементов
-    Generator<T>* generator;
-    Cardinal length;
-
-    int window_size;
-    int current_position; // до какого логического элемента мы догенерировали sequence
-    std::function<Generator<T>*()> generator_factory; // создает генератор заново (1000->5)
-
-    void check_range(int index) const;
 };
 
 template<class T>

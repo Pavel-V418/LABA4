@@ -2,7 +2,7 @@
 #define LABA4_MAP_GENERATOR_H
 
 #include "generator.h"
-#include "../cardinal.h"
+#include "../lazy/cardinal.h"
 template<class T>
 class MapGenerator : public Generator<T> { // строит посл-ть поверх старой (чтобы не вычислять всю посл-ть заранее)
 

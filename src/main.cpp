@@ -1,541 +1,699 @@
 #include <iostream>
-#include "generators/rule_generator.h"
-#include "lazy_sequence.h"
-#include "streams/sequence_input_stream.h"
-#include "streams/sequence_output_stream.h"
-#include "streams/file_input_stream.h"
-#include "streams/file_output_stream.h"
-#include "streams/string_input_stream.h"
-#include "streams/string_output_stream.h"
-#include "../LABA_2/mutableArraySequence.h"
+#include <cstdlib>
+#include "../src/lazy/lazy_sequence.h"
+#include "../src/generators/stream_number_generator.h"
+#include "../src/streams/sequence_input_stream.h"
+#include "../src/statistics/statistics_processor.h"
+#include "../src/generators/fibonacci_generator.h"
+#include "../src/generators/random_generator.h"
+
+// menus
+void main_menu();
+void lazy_sequence_menu();
+void streams_menu();
+void statistics_menu();
+
+// streams demos
+void demo_stream_read();
+void demo_stream_seek();
+void demo_stream_open_close();
+
+// statistics demos
+void demo_arithmetic_pipeline();
+void demo_random_pipeline();
 
 int main() {
 
-    /*====================================================*/
-    /*================ FIBONACCI RULE ====================*/
-    /*====================================================*/
-
-    auto fib_rule = [](Sequence<int>* seq)
-    {
-        int size = seq->get_length().get_value();
-
-        if(size == 0)
-            return 1;
-
-        if(size == 1)
-            return 1;
-
-        return seq->get(size - 1)+ seq->get(size - 2);
-    };
-
-    /*====================================================*/
-    /*=================== FIBONACCI ======================*/
-    /*====================================================*/
-
-    Sequence<int>* cache = new MutableArraySequence<int>();
-
-    Generator<int>* fib_generator = new RuleGenerator<int>(fib_rule, cache,true);
-
-    LazySequence<int> fib(fib_generator,cache,Cardinal::infinity());
-
-
-    std::cout << "========== BASIC TEST ==========" << std::endl;
-
-    std::cout << fib.get(0) << std::endl;
-    std::cout << fib.get(1) << std::endl;
-    std::cout << fib.get(2) << std::endl;
-    std::cout << fib.get(3) << std::endl;
-    std::cout << fib.get(10) << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*===================== MAP TEST =====================*/
-    /*====================================================*/
-
-    auto multiply_by_2 = [](const int& x)
-    {
-        std::cout
-            << "TRANSFORM: "
-            << x
-            << " -> "
-            << x * 2
-            << std::endl;
-
-        return x * 2;
-    };
-
-    LazySequence<int>* doubled =
-        fib.map(multiply_by_2);
-
-    std::cout << "========== MAP TEST ==========" << std::endl;
-
-    std::cout << doubled->get(0) << std::endl;
-    std::cout << doubled->get(1) << std::endl;
-    std::cout << doubled->get(5) << std::endl;
-
-    std::cout << std::endl;
-
-    std::cout << "MAP CACHE TEST" << std::endl;
-
-    std::cout << doubled->get(5) << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*==================== WHERE TEST ====================*/
-    /*====================================================*/
-
-    auto even = [](const int& x)
-    {
-        std::cout
-            << "CHECK: "
-            << x
-            << std::endl;
-
-        return x % 2 == 0;
-    };
-
-    LazySequence<int>* evens =
-        fib.where(even);
-
-    std::cout << "========== WHERE TEST ==========" << std::endl;
-
-    std::cout << evens->get(0) << std::endl;
-    std::cout << evens->get(1) << std::endl;
-    std::cout << evens->get(2) << std::endl;
-
-    std::cout << std::endl;
-
-    std::cout << "WHERE CACHE TEST" << std::endl;
-
-    std::cout << evens->get(2) << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*===================== TAKE TEST ====================*/
-    /*====================================================*/
-
-    LazySequence<int>* first_three =
-        fib.take(3);
-
-    std::cout << "========== TAKE TEST ==========" << std::endl;
-
-    std::cout << first_three->get(0) << std::endl;
-    std::cout << first_three->get(1) << std::endl;
-    std::cout << first_three->get(2) << std::endl;
-
-    std::cout << std::endl;
-
-    std::cout << "TAKE LENGTH TEST" << std::endl;
-
-    std::cout
-        << first_three
-               ->get_length()
-               .get_value()
-        << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*==================== REDUCE TEST ===================*/
-    /*====================================================*/
-
-    auto sum = [](const int& a, const int& b)
-    {
-        std::cout
-            << "REDUCE: "
-            << a
-            << " + "
-            << b
-            << " = "
-            << a + b
-            << std::endl;
-
-        return a + b;
-    };
-
-    LazySequence<int>* even_take =
-        fib
-            .where(even)
-            ->take(3);
-
-    std::cout << "========== REDUCE TEST ==========" << std::endl;
-
-    int result =
-        even_take->reduce(sum, 0);
-
-    std::cout << std::endl;
-
-    std::cout
-        << "FINAL RESULT: "
-        << result
-        << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*==================== CONCAT TEST ===================*/
-    /*====================================================*/
-
-    LazySequence<int>* concat_seq =
-        fib
-            .take(3)
-            ->concat(
-                fib.take(2)
-            );
-
-    std::cout << "========== CONCAT TEST ==========" << std::endl;
-
-    std::cout << concat_seq->get(0) << std::endl;
-    std::cout << concat_seq->get(1) << std::endl;
-    std::cout << concat_seq->get(2) << std::endl;
-    std::cout << concat_seq->get(3) << std::endl;
-    std::cout << concat_seq->get(4) << std::endl;
-
-    std::cout << std::endl;
-
-    /*====================================================*/
-    /*=================== CARDINAL TEST ==================*/
-    /*====================================================*/
-
-    std::cout << "========== CARDINAL TEST ==========" << std::endl;
-
-    Cardinal inf =
-        fib.get_length();
-
-    if(inf.is_infinite())
-    {
-        std::cout
-            << "Fibonacci length is INFINITE"
-            << std::endl;
-    }
-
-    Cardinal finite =
-        first_three->get_length();
-
-    std::cout
-        << "take(3) length = "
-        << finite.get_value()
-        << std::endl;
-
-    std::cout << std::endl;
-
-
-    delete doubled;
-
-    delete evens;
-
-    delete first_three;
-
-    delete even_take;
-
-    delete concat_seq;
-
-    /*================================================*/
-    /*============== STRING INPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== STRING INPUT TEST =========="
-        << std::endl;
-
-    StringInputStream string_input(
-        "Hello"
-    );
-
-    string_input.open();
-
-    while(
-        !string_input.is_end_of_stream()
-    )
-    {
-        std::cout
-            << string_input.read();
-    }
-
-    std::cout << std::endl;
-
-    string_input.close();
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*============= STRING OUTPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== STRING OUTPUT TEST =========="
-        << std::endl;
-
-    StringOutputStream string_output;
-
-    string_output.open();
-
-    string_output.write('H');
-    string_output.write('i');
-    string_output.write('!');
-
-    std::cout
-        << string_output.get_string()
-        << std::endl;
-
-    std::cout
-        << "POSITION: "
-        << string_output.get_position()
-        << std::endl;
-
-    string_output.close();
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*=============== FILE OUTPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== FILE OUTPUT TEST =========="
-        << std::endl;
-
-    FileOutputStream file_output(
-        "test.txt"
-    );
-
-    file_output.open();
-
-    file_output.write('A');
-    file_output.write('B');
-    file_output.write('C');
-
-    file_output.close();
-
-    std::cout
-        << "Written to file test.txt"
-        << std::endl;
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*================ FILE INPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== FILE INPUT TEST =========="
-        << std::endl;
-
-    FileInputStream file_input(
-        "test.txt"
-    );
-
-    file_input.open();
-
-    try
-    {
-        while(true)
-        {
-            std::cout
-                << file_input.read();
-        }
-    }
-    catch(const std::out_of_range&)
-    {
-    }
-
-    std::cout << std::endl;
-
-    file_input.close();
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*================= SEEK TEST ====================*/
-    /*================================================*/
-
-    std::cout
-        << "========== SEEK TEST =========="
-        << std::endl;
-
-    StringInputStream seek_stream(
-        "abcdef"
-    );
-
-    seek_stream.open();
-
-    seek_stream.seek(3);
-
-    std::cout
-        << seek_stream.read()
-        << std::endl;
-
-    seek_stream.close();
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*=========== SEQUENCE OUTPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== SEQUENCE OUTPUT TEST =========="
-        << std::endl;
-
-    auto* sequence =
-        new MutableArraySequence<char>();
-
-    SequenceOutputStream<char>
-        sequence_output(sequence);
-
-    sequence_output.open();
-
-    sequence_output.write('X');
-    sequence_output.write('Y');
-    sequence_output.write('Z');
-
-    sequence_output.close();
-
-    for(
-        int i = 0;
-        i < sequence->get_length().get_value();
-        i++
-    )
-    {
-        std::cout
-            << sequence->get(i);
-    }
-
-    std::cout << std::endl;
-
-    std::cout << std::endl;
-
-
-    /*================================================*/
-    /*============ SEQUENCE INPUT TEST ===============*/
-    /*================================================*/
-
-    std::cout
-        << "========== SEQUENCE INPUT TEST =========="
-        << std::endl;
-
-    SequenceInputStream<char>
-        sequence_input(sequence);
-
-    sequence_input.open();
-
-    while(
-        !sequence_input.is_end_of_stream()
-    )
-    {
-        std::cout
-            << sequence_input.read();
-    }
-
-    std::cout << std::endl;
-
-    sequence_input.close();
-
-    delete sequence;
-
-    std::cout
-    << "========== LAZY APPEND TEST =========="
-    << std::endl;
-
-/*============================================*/
-/*============== SOURCE CACHE ================*/
-/*============================================*/
-
-auto* cache_app =
-    new MutableArraySequence<int>();
-
-cache_app->append(1);
-cache_app->append(2);
-cache_app->append(3);
-
-/*============================================*/
-/*=============== LAZY SEQUENCE ==============*/
-/*============================================*/
-
-auto* sequence_app =
-    new LazySequence<int>(
-        nullptr,
-        cache_app,
-        Cardinal(3)
-    );
-
-/*============================================*/
-/*================== APPEND ==================*/
-/*============================================*/
-
-auto* appended =
-    sequence_app->append(100);
-
-/*============================================*/
-/*=================== READ ===================*/
-/*============================================*/
-
-for(int i = 0; i < 4; i++)
-{
-    std::cout
-        << appended->get(i)
-        << " ";
-}
-
-std::cout << std::endl;
-
-/*============================================*/
-/*=============== LENGTH TEST ================*/
-/*============================================*/
-
-std::cout
-    << "LENGTH: "
-    << appended->get_length()
-           .get_value()
-    << std::endl;
-
-/*============================================*/
-/*============= ORIGINAL CHECK ===============*/
-/*============================================*/
-
-std::cout
-    << "ORIGINAL: ";
-
-for(int i = 0; i < 3; i++)
-{
-    std::cout
-        << sequence_app->get(i)
-        << " ";
-}
-
-std::cout << std::endl;
-
-/*============================================*/
-/*============== MULTI APPEND ================*/
-/*============================================*/
-
-auto* appended2 =
-    appended->append(200);
-
-for(int i = 0; i < 5; i++)
-{
-    std::cout
-        << appended2->get(i)
-        << " ";
-}
-
-std::cout << std::endl;
-
-/*============================================*/
-/*================== CLEANUP =================*/
-/*============================================*/
-
-delete sequence_app;
-delete appended;
-delete appended2;
+    main_menu();
 
     return 0;
+}
+
+void main_menu() {
+
+    bool running = true;
+
+    while(running){
+
+        std::cout << "\n LABA 4 - STREAM PROCESSING SYSTEM\n";
+
+        std::cout << "1. LazySequence\n";
+        std::cout << "2. Streams\n";
+        std::cout << "3. Online Stream Statistics\n";
+        std::cout << "0. Exit\n";
+
+        int choice;
+
+        std::cout << "Choice: ";
+        std::cin >> choice;
+
+        switch(choice){
+
+            case 1:
+                lazy_sequence_menu();
+                break;
+
+            case 2:
+                streams_menu();
+                break;
+
+            case 3:
+                statistics_menu();
+                break;
+
+            case 0:
+                running = false;
+                break;
+
+            default:
+                std::cout << "Invalid choice\n";
+        }
+    }
+}
+
+void lazy_sequence_menu() {
+
+    LazySequence<int>* current_sequence = nullptr;
+
+    bool running = true;
+
+    while(running){
+        std::cout << "LAZY SEQUENCE MENU\n";
+
+        if(current_sequence == nullptr)
+            std::cout << "Current sequence: NOT CREATED\n";
+
+        std::cout << "1. Create sequence\n";
+        std::cout << "2. Show sequence\n";
+        std::cout << "3. Get element\n";
+        std::cout << "4. Take\n";
+        std::cout << "5. Skip\n";
+        std::cout << "6. Map (*2)\n";
+        std::cout << "7. Filter (%2)\n";
+        std::cout << "8. Subsequence\n";
+        std::cout << "9. Append\n";
+        std::cout << "10. Prepend\n";
+        std::cout << "11. InsertAt\n";
+        std::cout << "12. Delete sequence\n";
+        std::cout << "0. Back\n";
+
+        int choice;
+
+        std::cout << "Choice: ";
+        std::cin >> choice;
+
+        switch(choice){
+
+            case 1: {
+
+                if(current_sequence != nullptr){
+
+                    delete current_sequence;
+                    current_sequence = nullptr;
+                }
+
+                std::cout << "Choose generator type:\n\n";
+
+                std::cout << "1. Arithmetic progression\n";
+                std::cout << "2. Fibonacci\n";
+                std::cout << "3. Random\n";
+
+                int generator_choice;
+
+                std::cout << "Choice: ";
+                std::cin >> generator_choice;
+
+                switch(generator_choice){
+
+                    case 1: {
+
+                        int start;
+                        int step;
+
+                        std::cout << "Start value: ";
+                        std::cin >> start;
+
+                        std::cout << "Step: ";
+                        std::cin >> step;
+
+                        auto factory = [start, step]() {
+                            return new StreamNumberGenerator<int>(start,step);
+                        };
+
+                        current_sequence = new LazySequence<int>(factory,Cardinal::infinity(),100);
+
+                        std::cout << "Arithmetic sequence created.\n";
+
+                        break;
+                    }
+
+                    case 2: {
+
+                        auto factory = []() {
+                            return new FibonacciGenerator<int>();
+                        };
+
+                        current_sequence = new LazySequence<int>(factory,Cardinal::infinity(),100);
+
+                        std::cout << "Fibonacci sequence created.\n";
+
+                        break;
+                    }
+
+                    case 3: {
+
+                        int min_value;
+                        int max_value;
+
+                        std::cout << "Minimum value: ";
+                        std::cin >> min_value;
+
+                        std::cout << "Maximum value: ";
+                        std::cin >> max_value;
+
+                        auto factory = [min_value, max_value]() {
+                            return new RandomGenerator<int>(min_value,max_value);
+                        };
+
+                        current_sequence = new LazySequence<int>(factory,Cardinal::infinity(),100);
+
+                        std::cout << "Random sequence created.\n";
+
+                        break;
+                    }
+
+                        default:
+
+                            std::cout << "Invalid generator type.\n";
+                            }
+
+                            break;
+            }
+
+            case 2: {
+
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int count;
+
+                std::cout << "Elements count: ";
+                std::cin >> count;
+
+                for(int i = 0; i < count; i++)
+                    std::cout << current_sequence->get(i) << " ";
+
+                std::cout << std::endl;
+
+                break;
+            }
+
+            case 3: {
+
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int index;
+
+                std::cout << "Index: ";
+                std::cin >> index;
+
+                std::cout << "Element = " << current_sequence->get(index) << std::endl;
+
+                break;
+            }
+
+            case 4: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int count;
+
+                std::cout << "Take count: ";
+                std::cin >> count;
+
+                LazySequence<int>* result = current_sequence->take(count);
+
+                for(int i = 0; i < count; i++)
+                    std::cout << result->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete result;
+
+                break;
+            }
+
+            case 5: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int skip_count;
+
+                std::cout << "Skip count: ";
+                std::cin >> skip_count;
+
+                LazySequence<int>* result = current_sequence->skip(skip_count);
+
+                for(int i = 0; i < 10; i++)
+                    std::cout << result->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete result;
+
+                break;
+            }
+
+            case 6: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                LazySequence<int>* mapped = current_sequence->map([](const int& x) {
+                            return x * 2;
+                        }
+                    );
+
+                for(int i = 0; i < 10; i++)
+                    std::cout << mapped->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete mapped;
+
+                break;
+            }
+
+            case 7: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                LazySequence<int>* filtered = current_sequence->where([](const int& x) {
+                            return x % 2 == 0;
+                        }
+                    );
+
+                for(int i = 0; i < 10; i++)
+                    std::cout << filtered->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete filtered;
+
+                break;
+            }
+
+            case 8: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int start;
+                int end;
+
+                std::cout << "Start index: ";
+                std::cin >> start;
+
+                std::cout << "End index: ";
+                std::cin >> end;
+
+                LazySequence<int>* sub = current_sequence->get_subsequence(start,end);
+
+                for(int i = 0; i <= end - start; i++)
+                    std::cout << sub->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete sub;
+
+                break;
+            }
+
+            case 9: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int value;
+
+                std::cout << "Append value: ";
+                std::cin >> value;
+
+                LazySequence<int>* result = current_sequence->append(value);
+
+                for(int i = 0; i < 15; i++)
+                    std::cout << result->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete result;
+
+                break;
+            }
+
+            case 10: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int value;
+
+                std::cout << "Prepend value: ";
+                std::cin >> value;
+
+                LazySequence<int>* result = current_sequence->prepend(value);
+
+                for(int i = 0; i < 15; i++)
+                    std::cout << result->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete result;
+
+                break;
+            }
+
+            case 11: {
+                if(current_sequence == nullptr){
+
+                    std::cout << "Create sequence first.\n";
+
+                    break;
+                }
+
+                int value;
+                int index;
+
+                std::cout << "Value: ";
+                std::cin >> value;
+
+                std::cout << "Index: ";
+                std::cin >> index;
+
+                LazySequence<int>* result = current_sequence->insert_at(value,index);
+
+                for(int i = 0; i < 15; i++)
+                    std::cout << result->get(i) << " ";
+
+                std::cout << std::endl;
+
+                delete result;
+
+                break;
+            }
+
+            case 12: {
+
+                if(current_sequence != nullptr){
+
+                    delete current_sequence;
+
+                    current_sequence = nullptr;
+
+                    std::cout << "Sequence deleted.\n";
+                }
+
+                else
+                    std::cout << "Sequence does not exist.\n";
+
+                break;
+            }
+
+            case 0: {
+
+                running = false;
+
+                break;
+            }
+
+            default:
+                std::cout << "Invalid choice\n";
+        }
+    }
+
+    if(current_sequence != nullptr)
+        delete current_sequence;
+}
+
+void streams_menu() {
+
+    bool running = true;
+
+    while(running){
+
+        std::cout << "STREAMS MENU\n";
+
+        std::cout << "1. Read stream\n";
+        std::cout << "2. Seek stream\n";
+        std::cout << "3. Open / Close stream\n";
+        std::cout << "0. Back\n";
+
+        int choice;
+
+        std::cout << "Choice: ";
+        std::cin >> choice;
+
+        switch(choice){
+
+            case 1:
+                demo_stream_read();
+                break;
+
+            case 2:
+                demo_stream_seek();
+                break;
+
+            case 3:
+                demo_stream_open_close();
+                break;
+
+            case 0:
+                running = false;
+                break;
+
+            default:
+                std::cout << "Invalid choice\n";
+        }
+    }
+}
+
+void demo_stream_read() {
+
+    auto factory = []() {
+        return new StreamNumberGenerator<int>(1,1);
+    };
+
+    LazySequence<int> sequence(factory, Cardinal::infinity(),100);
+
+    SequenceInputStream<int> stream(&sequence);
+    stream.open();
+
+    int count;
+
+    std::cout << "Read count: ";
+    std::cin >> count;
+
+    for(int i = 0; i < count; i++)
+        std::cout << stream.read() << " ";
+
+    std::cout << std::endl;
+
+    stream.close();
+}
+
+void demo_stream_seek() {
+
+    auto factory = []() {
+        return new StreamNumberGenerator<int>(1,1);
+    };
+
+    LazySequence<int> sequence(factory, Cardinal::infinity(), 100);
+
+    SequenceInputStream<int> stream(&sequence);
+
+    stream.open();
+
+    int position;
+
+    std::cout << "Seek position: ";
+    std::cin >> position;
+
+    stream.seek(position);
+
+    std::cout << "Value = "<< stream.read()<< std::endl;
+
+    stream.close();
+}
+
+void demo_stream_open_close() {
+
+    auto factory = []() {
+        return new StreamNumberGenerator<int>(1,1);
+    };
+
+    LazySequence<int> sequence(factory,Cardinal::infinity(),100);
+    SequenceInputStream<int> stream(&sequence);
+
+    std::cout << "Opening stream...\n";
+
+    stream.open();
+
+    std::cout << "Reading value: "<< stream.read()<< std::endl;
+    std::cout << "Closing stream...\n";
+
+    stream.close();
+
+    std::cout << "Stream closed.\n";
+}
+
+void statistics_menu() {
+
+    bool running = true;
+
+    while(running){
+
+        std::cout << "ONLINE STREAM STATISTICS MENU\n";
+
+        std::cout << "1. Arithmetic stream pipeline\n";
+        std::cout << "2. Random stream pipeline\n";
+        std::cout << "0. Back\n";
+
+        int choice;
+
+        std::cout << "Choice: ";
+        std::cin >> choice;
+
+        switch(choice){
+
+            case 1:
+                demo_arithmetic_pipeline();
+                break;
+
+            case 2:
+                demo_random_pipeline();
+                break;
+
+            case 0:
+                running = false;
+                break;
+
+            default:
+                std::cout << "Invalid choice\n";
+        }
+    }
+}
+
+void demo_arithmetic_pipeline() {
+
+    int start;
+    int step;
+    int window_size;
+    int count;
+
+    std::cout << "Start value: ";
+    std::cin >> start;
+
+    std::cout << "Step: ";
+    std::cin >> step;
+
+    std::cout << "Median window size: ";
+    std::cin >> window_size;
+
+    std::cout << "Elements count: ";
+    std::cin >> count;
+
+    auto factory = [start, step]() {
+        return new StreamNumberGenerator<int>(start,step);
+    };
+
+    LazySequence<int> sequence(factory,Cardinal::infinity(),100);
+
+    SequenceInputStream<int> stream(&sequence);
+
+    stream.open();
+
+    StatisticsProcessor<int> processor(&stream,window_size);
+
+    for(int i = 0; i < count; i++){
+
+        processor.process_next();
+
+        std::cout << "Generated value: " << sequence.get(i) << std::endl;
+        std::cout << "Count: " << processor.get_count() << std::endl;
+        std::cout << "Average: " << processor.get_average() << std::endl;
+        std::cout << "Median: " << processor.get_median() << std::endl;
+        std::cout << "Min: " << processor.get_min()<< std::endl;
+        std::cout << "Max: " << processor.get_max() << std::endl;
+    }
+
+    stream.close();
+}
+
+void demo_random_pipeline() {
+
+    int window_size;
+    int count;
+
+    std::cout << "Median window size: ";
+    std::cin >> window_size;
+
+    std::cout << "Elements count: ";
+    std::cin >> count;
+
+    auto factory = []() {
+        return new StreamNumberGenerator<int>(std::rand() % 100,std::rand() % 10 + 1);
+    };
+
+    LazySequence<int> sequence(factory,Cardinal::infinity(),100);
+
+    SequenceInputStream<int> stream(&sequence);
+    stream.open();
+    StatisticsProcessor<int> processor(&stream,window_size);
+
+    for(int i = 0; i < count; i++){
+
+        processor.process_next();
+
+        std::cout << "Generated value: " << sequence.get(i) << std::endl;
+        std::cout << "Count: " << processor.get_count() << std::endl;
+        std::cout << "Average: " << processor.get_average() << std::endl;
+        std::cout << "Median: " << processor.get_median() << std::endl;
+        std::cout << "Min: " << processor.get_min() << std::endl;
+        std::cout << "Max: " << processor.get_max() << std::endl;
+    }
+
+    stream.close();
 }
