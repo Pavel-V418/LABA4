@@ -33,7 +33,7 @@ public:
     const T& get(int logical_index) const;
 
     void push(const T& item, int logical_index);
-
+// есои длниа прыжка > длина окна, тогда удалить жлементы
     void clear();
 };
 

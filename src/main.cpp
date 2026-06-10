@@ -94,7 +94,10 @@ void lazy_sequence_menu() {
         std::cout << "9. Append\n";
         std::cout << "10. Prepend\n";
         std::cout << "11. InsertAt\n";
-        std::cout << "12. Delete sequence\n";
+        std::cout << "12. Concat\n";
+        std::cout << "13. Get by Cardinal\n";
+        std::cout << "14. Show length\n";
+        std::cout << "15. Delete sequence\n";
         std::cout << "0. Back\n";
 
         int choice;
@@ -232,10 +235,9 @@ void lazy_sequence_menu() {
             }
 
             case 4: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -244,23 +246,21 @@ void lazy_sequence_menu() {
                 std::cout << "Take count: ";
                 std::cin >> count;
 
-                LazySequence<int>* result = current_sequence->take(count);
+                LazySequence<int>* result =
+                    current_sequence->take(count);
 
-                for(int i = 0; i < count; i++)
-                    std::cout << result->get(i) << " ";
+                delete current_sequence;
+                current_sequence = result;
 
-                std::cout << std::endl;
-
-                delete result;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 5: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -269,69 +269,65 @@ void lazy_sequence_menu() {
                 std::cout << "Skip count: ";
                 std::cin >> skip_count;
 
-                LazySequence<int>* result = current_sequence->skip(skip_count);
+                LazySequence<int>* result =
+                    current_sequence->skip(skip_count);
 
-                for(int i = 0; i < 10; i++)
-                    std::cout << result->get(i) << " ";
+                delete current_sequence;
+                current_sequence = result;
 
-                std::cout << std::endl;
-
-                delete result;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 6: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
-                LazySequence<int>* mapped = current_sequence->map([](const int& x) {
+                LazySequence<int>* mapped =
+                    current_sequence->map(
+                        [](const int& x){
                             return x * 2;
                         }
                     );
 
-                for(int i = 0; i < 10; i++)
-                    std::cout << mapped->get(i) << " ";
+                delete current_sequence;
+                current_sequence = mapped;
 
-                std::cout << std::endl;
-
-                delete mapped;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 7: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
-                LazySequence<int>* filtered = current_sequence->where([](const int& x) {
+                LazySequence<int>* filtered =
+                    current_sequence->where(
+                        [](const int& x){
                             return x % 2 == 0;
                         }
                     );
 
-                for(int i = 0; i < 10; i++)
-                    std::cout << filtered->get(i) << " ";
+                delete current_sequence;
+                current_sequence = filtered;
 
-                std::cout << std::endl;
-
-                delete filtered;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 8: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -344,23 +340,21 @@ void lazy_sequence_menu() {
                 std::cout << "End index: ";
                 std::cin >> end;
 
-                LazySequence<int>* sub = current_sequence->get_subsequence(start,end);
+                LazySequence<int>* sub =
+                    current_sequence->get_subsequence(start,end);
 
-                for(int i = 0; i <= end - start; i++)
-                    std::cout << sub->get(i) << " ";
+                delete current_sequence;
+                current_sequence = sub;
 
-                std::cout << std::endl;
-
-                delete sub;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 9: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -369,23 +363,20 @@ void lazy_sequence_menu() {
                 std::cout << "Append value: ";
                 std::cin >> value;
 
-                LazySequence<int>* result = current_sequence->append(value);
+                LazySequence<int>* result =
+                    current_sequence->append(value);
 
-                for(int i = 0; i < 15; i++)
-                    std::cout << result->get(i) << " ";
+                current_sequence = result;
 
-                std::cout << std::endl;
-
-                delete result;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 10: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -396,21 +387,17 @@ void lazy_sequence_menu() {
 
                 LazySequence<int>* result = current_sequence->prepend(value);
 
-                for(int i = 0; i < 15; i++)
-                    std::cout << result->get(i) << " ";
+                current_sequence = result;
 
-                std::cout << std::endl;
-
-                delete result;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 11: {
+
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
-
                     break;
                 }
 
@@ -423,19 +410,104 @@ void lazy_sequence_menu() {
                 std::cout << "Index: ";
                 std::cin >> index;
 
-                LazySequence<int>* result = current_sequence->insert_at(value,index);
+                LazySequence<int>* result =
+                    current_sequence->insert_at(
+                        value,
+                        index
+                    );
 
-                for(int i = 0; i < 15; i++)
-                    std::cout << result->get(i) << " ";
+                current_sequence = result;
 
-                std::cout << std::endl;
-
-                delete result;
+                std::cout << "Sequence updated.\n";
 
                 break;
             }
 
             case 12: {
+
+                if(current_sequence == nullptr){
+                    std::cout << "Create sequence first.\n";
+                    break;
+                }
+
+                int start;
+                int step;
+
+                std::cout << "Second sequence start: ";
+                std::cin >> start;
+
+                std::cout << "Second sequence step: ";
+                std::cin >> step;
+
+                auto factory = [start, step]() {
+                    return new StreamNumberGenerator<int>(start, step);
+                };
+
+                auto* second = new LazySequence<int> (factory,Cardinal::infinity(),100);
+
+                current_sequence = current_sequence->concat(second);
+
+                std::cout << "Sequence concatenated.\n";
+
+                break;
+            }
+
+            case 13: {
+
+                if(current_sequence == nullptr){
+                    std::cout << "Create sequence first.\n";
+                    break;
+                }
+
+                int omega;
+                int offset;
+
+                std::cout << "Omega count: ";
+                std::cin >> omega;
+
+                std::cout << "Offset: ";
+                std::cin >> offset;
+
+                try{
+
+                    Cardinal index(omega, offset);
+
+                    std::cout
+                        << "Element = "
+                        << current_sequence->get(index)
+                        << std::endl;
+                }
+                catch(const std::exception& e){
+
+                    std::cout
+                        << "Error: "
+                        << e.what()
+                        << std::endl;
+                }
+
+                break;
+            }
+
+            case 14: {
+
+                if(current_sequence == nullptr){
+                    std::cout << "Create sequence first.\n";
+                    break;
+                }
+
+                Cardinal len =
+                    current_sequence->get_length();
+
+                std::cout
+                    << len.get_omega_count()
+                    << "w + "
+                    << len.get_offset()
+                    << std::endl;
+
+                break;
+            }
+
+            case 15: {
 
                 if(current_sequence != nullptr){
 

@@ -16,6 +16,7 @@ public:
     FibonacciGenerator();
 
     T get_next() override;
+    T get(const Cardinal& index) override;
 
     bool has_next() const override;
 };
@@ -34,6 +35,32 @@ T FibonacciGenerator<T>::get_next() {
     current = next;
 
     return value;
+}
+
+template<class T>
+T FibonacciGenerator<T>::get(const Cardinal& index) {
+    if(index.get_omega_count() != 0)
+        throw std::logic_error("Fibonacci generator does not support omega indices");
+
+    int n = index.get_offset();
+
+    if(n == 0)
+        return 1;
+    
+    if(n == 1)
+        return 1;
+
+    T a = 1;
+    T b = 1;
+
+    for(int i = 2; i <= n; i++) {
+        T c = a + b;
+
+        a = b;
+        b = c;
+    }
+
+    return b;
 }
 
 template<class T>

@@ -6,53 +6,56 @@
 class Cardinal {
 
 private:
-    bool infinite;
-    int value;
+    int omega_count; // кол-во бесконечностей
+    int offset;
 
 public:
 
-    Cardinal() : infinite(false), value(0) {}
+    Cardinal() : omega_count(0), offset(0) {}
 
-    Cardinal(int value) : infinite(false), value(value) {}
+    Cardinal(int offset) : omega_count(0), offset(offset) {}
+
+    Cardinal(int omega_count, int offset): omega_count(omega_count), offset(offset) {}
 
     static Cardinal infinity() {
-        Cardinal inf;
-
-        inf.infinite = true;
-
-        return inf;
+        return Cardinal(1, 0);
     }
 
     bool is_infinite() const {
-        return infinite;
+        return omega_count > 0;
     }
 
-    int get_value() const {
-        if(infinite)
-            throw std::logic_error("Infinite cardinal has no finite value");
-
-        return value;
+    int get_omega_count() const {
+        return omega_count;
     }
 
-    bool operator==(const Cardinal& other) const { // сравнивает 2 мощности
-        if (infinite && other.infinite)
-            return true;
+    int get_offset() const {
+        return offset;
+    }
 
-        if (infinite || other.infinite)
-            return false;
-
-        return value == other.value;
+    bool operator==(const Cardinal& other) const {
+        return omega_count == other.omega_count && offset == other.offset;
     }
 
     bool operator!=(const Cardinal& other) const {
         return !(*this == other);
     }
 
-    Cardinal operator+(const Cardinal& other) const { // сложение мощностей
-        if(infinite || other.infinite)
-            return infinity();
+    Cardinal operator+(const Cardinal& other) const {
+        return Cardinal(omega_count + other.omega_count,offset + other.offset);
+    }
 
-        return Cardinal(value + other.value);
+    Cardinal operator-(const Cardinal& other) const {
+        int new_omega = omega_count - other.omega_count;
+        int new_offset = offset - other.offset;
+
+        if(new_omega < 0)
+            throw std::logic_error("Negative omega count");
+
+        if(new_offset < 0)
+            throw std::logic_error("Negative offset");
+
+        return Cardinal(new_omega,new_offset);
     }
 };
 

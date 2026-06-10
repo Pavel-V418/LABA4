@@ -10,6 +10,7 @@ public:
     MapGenerator(Sequence<T>* source,std::function<T(const T&)> transform);
 
     T get_next() override;
+    T get(const Cardinal& index) override;
 
     bool has_next() const override;
 
@@ -41,7 +42,13 @@ bool MapGenerator<T>::has_next() const {
     if(length.is_infinite())
         return true;
 
-    return current_index < length.get_value();
+    return current_index < length.get_offset();
+}
+
+template<class T>
+T MapGenerator<T>::get(const Cardinal& index) {
+
+    return transform(source->get(index));
 }
 
 #endif //LABA4_MAP_GENERATOR_H

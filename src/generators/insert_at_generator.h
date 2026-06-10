@@ -19,6 +19,7 @@ public:
     InsertAtGenerator(Sequence<T>* source, const T& item, int insert_index);
 
     T get_next() override;
+    T get(const Cardinal& index) override;
 
     bool has_next() const override;
 };
@@ -58,7 +59,25 @@ bool InsertAtGenerator<T>::has_next() const {
     if(length.is_infinite())
         return true;
 
-    return current_index <= length.get_value();
+    return current_index <= length.get_offset();
 }
 
+template<class T>
+T InsertAtGenerator<T>::get(const Cardinal& index) {
+
+    if(index.get_omega_count() != 0)
+        throw std::logic_error(
+            "InsertAtGenerator does not support omega indices"
+        );
+
+    int pos = index.get_offset();
+
+    if(pos == insert_index)
+        return inserted_item;
+
+    if(pos < insert_index)
+        return source->get(pos);
+
+    return source->get(pos - 1);
+}
 #endif //LABA4_INSERT_GENERATOR_H

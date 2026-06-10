@@ -17,6 +17,7 @@ public:
     RandomGenerator(T min_value, T max_value);
 
     T get_next() override;
+    T get(const Cardinal& index) override;
 
     bool has_next() const override;
 };
@@ -28,6 +29,14 @@ RandomGenerator<T>::RandomGenerator(T min_value,T max_value)
 template<class T>
 T RandomGenerator<T>::get_next() {
     return min_value + rand() % (max_value - min_value + 1);
+}
+
+template<class T>
+T RandomGenerator<T>::get(const Cardinal&)
+{
+    throw std::logic_error(
+        "RandomGenerator does not support indexed access"
+    );
 }
 
 template<class T>

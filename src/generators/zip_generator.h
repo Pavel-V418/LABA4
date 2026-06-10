@@ -18,6 +18,7 @@ public:
     ZipGenerator(Sequence<T1>* first, Sequence<T2>* second);
 
     Pair<T1,T2> get_next() override;
+    Pair<T1,T2> get(const Cardinal& index) override;
 
     bool has_next() const override;
 };
@@ -45,16 +46,23 @@ bool ZipGenerator<T1,T2>::has_next() const {
         return true;
 
     if(!first_length.is_infinite()){
-        if(current_index >= first_length.get_value())
+        if(current_index >= first_length.get_offset())
             return false;
     }
 
     if(!second_length.is_infinite()){
-        if(current_index >= second_length.get_value())
+        if(current_index >= second_length.get_offset())
             return false;
     }
 
     return true;
 }
 
+template<class T1, class T2>
+Pair<T1,T2> ZipGenerator<T1,T2>::get(const Cardinal& index) {
+    return Pair<T1,T2>(
+        first->get(index),
+        second->get(index)
+    );
+}
 #endif //LABA4_ZIP_GENERATOR_H

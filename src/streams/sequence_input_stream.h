@@ -58,7 +58,7 @@ bool SequenceInputStream<T>::is_end_of_stream() const {
     if(length.is_infinite())
         return false;
 
-    return position >= length.get_value();
+    return position >= length.get_offset();
 }
 
 template<class T>
@@ -83,7 +83,7 @@ void SequenceInputStream<T>::seek(int new_position) {
 
     Cardinal length = source->get_length();
 
-    if(!length.is_infinite() && new_position > length.get_value())
+    if(!length.is_infinite() && new_position > length.get_offset())
         throw std::out_of_range("Seek position out of range");
 
     position = new_position;

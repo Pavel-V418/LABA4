@@ -17,6 +17,7 @@ public:
     PrependGenerator(Sequence<T>* source,const T& item);
 
     T get_next() override;
+    T get(const Cardinal& index) override;
 
     bool has_next() const override;
 };
@@ -46,7 +47,23 @@ bool PrependGenerator<T>::has_next() const {
     if(length.is_infinite())
         return true;
 
-    return current_index <= length.get_value();
+    return current_index <= length.get_offset();
+}
+
+template<class T>
+T PrependGenerator<T>::get(const Cardinal& index) {
+
+    if(index.get_omega_count() != 0)
+        throw std::logic_error(
+            "PrependGenerator does not support omega indices"
+        );
+
+    int pos = index.get_offset();
+
+    if(pos == 0)
+        return prepended_item;
+
+    return source->get(pos - 1);
 }
 
 #endif //LABA4_PREPEND_GENERATOR_H
