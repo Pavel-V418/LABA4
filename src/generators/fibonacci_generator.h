@@ -27,7 +27,6 @@ FibonacciGenerator<T>::FibonacciGenerator()
 
 template<class T>
 T FibonacciGenerator<T>::get_next() {
-
     T value = current;
     T next = previous + current;
 

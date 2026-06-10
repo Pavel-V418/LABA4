@@ -49,9 +49,7 @@ template<class T>
 T FilterGenerator<T>::get(const Cardinal& index) {
 
     if(index.get_omega_count() != 0)
-        throw std::logic_error(
-            "FilterGenerator does not support omega indices"
-        );
+        throw std::logic_error("FilterGenerator does not support omega indices");
 
     int target = index.get_offset();
 
@@ -59,11 +57,9 @@ T FilterGenerator<T>::get(const Cardinal& index) {
     int source_index = 0;
 
     while(true) {
-
         T value = source->get(source_index++);
 
         if(predicate(value)) {
-
             found++;
 
             if(found == target)

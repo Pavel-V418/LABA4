@@ -52,12 +52,7 @@ T ConcatGenerator<T>::get(const Cardinal& index) {
     if(index.get_omega_count() < first_length.get_omega_count())
         return first->get(index);
 
-    return second->get(
-        Cardinal(
-            index.get_omega_count() - first_length.get_omega_count(),
-            index.get_offset()
-        )
-    );
+    return second->get(Cardinal(index.get_omega_count() - first_length.get_omega_count(),index.get_offset()));
 }
 
 template<class T>

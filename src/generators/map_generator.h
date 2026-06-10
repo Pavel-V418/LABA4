@@ -27,7 +27,6 @@ MapGenerator<T>::MapGenerator(Sequence<T> *source, std::function<T(const T &)> t
 
 template<class T>
 T MapGenerator<T>::get_next() {
-
     T value = source->get(current_index);
 
     current_index++;
@@ -47,7 +46,6 @@ bool MapGenerator<T>::has_next() const {
 
 template<class T>
 T MapGenerator<T>::get(const Cardinal& index) {
-
     return transform(source->get(index));
 }
 

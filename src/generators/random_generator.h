@@ -32,11 +32,8 @@ T RandomGenerator<T>::get_next() {
 }
 
 template<class T>
-T RandomGenerator<T>::get(const Cardinal&)
-{
-    throw std::logic_error(
-        "RandomGenerator does not support indexed access"
-    );
+T RandomGenerator<T>::get(const Cardinal&){
+    throw std::logic_error("RandomGenerator does not support indexed access");
 }
 
 template<class T>

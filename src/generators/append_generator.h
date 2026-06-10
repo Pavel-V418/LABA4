@@ -8,17 +8,15 @@ class AppendGenerator : public Generator<T> {
 
 private:
     Sequence<T>* source;
-
     T appended_item;
-
     int current_index;
 
 public:
-
     AppendGenerator(Sequence<T>* source,const T& item);
 
     T get_next() override;
     T get(const Cardinal& index) override;
+
     bool has_next() const override;
 };
 
@@ -28,7 +26,6 @@ AppendGenerator<T>::AppendGenerator(Sequence<T>* source,const T& item)
 
 template<class T>
 T AppendGenerator<T>::get_next() {
-
     Cardinal length = source->get_length();
 
     if(length.is_infinite())
@@ -49,12 +46,9 @@ T AppendGenerator<T>::get(const Cardinal& index) {
         return source->get(index.get_offset());
 
     if(index.get_omega_count() != 1)
-        throw std::logic_error(
-            "AppendGenerator: invalid omega count"
-        );
+        throw std::logic_error("AppendGenerator: invalid omega count");
 
     Cardinal source_length = source->get_length();
-
     int my_position = source_length.get_offset() + 1;
 
     if(index.get_offset() == my_position)

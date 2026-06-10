@@ -40,16 +40,11 @@ bool TakeGenerator<T>::has_next() const {
 
 template<class T>
 T TakeGenerator<T>::get(const Cardinal& index) {
-
     if(index.get_omega_count() != 0)
-        throw std::logic_error(
-            "TakeGenerator does not support omega indices"
-        );
+        throw std::logic_error("TakeGenerator does not support omega indices");
 
     if(index.get_offset() >= limit)
-        throw std::out_of_range(
-            "TakeGenerator: index out of range"
-        );
+        throw std::out_of_range("TakeGenerator: index out of range");
 
     return source->get(index.get_offset());
 }

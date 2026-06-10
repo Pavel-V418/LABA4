@@ -52,11 +52,8 @@ bool PrependGenerator<T>::has_next() const {
 
 template<class T>
 T PrependGenerator<T>::get(const Cardinal& index) {
-
     if(index.get_omega_count() != 0)
-        throw std::logic_error(
-            "PrependGenerator does not support omega indices"
-        );
+        throw std::logic_error("PrependGenerator does not support omega indices");
 
     int pos = index.get_offset();
 

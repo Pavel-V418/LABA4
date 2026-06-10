@@ -38,7 +38,7 @@ public:
     ~LazySequence() override;
 
     const T& get(const Cardinal& index);
-    const T& get(int index) override; // закомментировать, этот метод работать не будет
+    const T& get(int index) override;
     const T& get_first() override;
     const T& get_last() override;
 
@@ -206,16 +206,9 @@ LazySequence<T>* LazySequence<T>::append(const T& item) {
         return new AppendGenerator<T>(this, item);
     };
 
-    Cardinal new_length(
-        length.get_omega_count(),
-        length.get_offset() + 1
-    );
+    Cardinal new_length(length.get_omega_count(),length.get_offset() + 1);
 
-    return new LazySequence<T>(
-        factory,
-        new_length,
-        window_size
-    );
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
@@ -225,16 +218,9 @@ LazySequence<T>* LazySequence<T>::prepend(const T& item) {
         return new PrependGenerator<T>(this, item);
     };
 
-    Cardinal new_length(
-        length.get_omega_count(),
-        length.get_offset() + 1
-    );
+    Cardinal new_length(length.get_omega_count(),length.get_offset() + 1);
 
-    return new LazySequence<T>(
-        factory,
-        new_length,
-        window_size
-    );
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
@@ -248,23 +234,12 @@ LazySequence<T>* LazySequence<T>::insert_at(const T& item, int index) {
         throw std::out_of_range("Insert index out of range");
 
     auto factory = [this, item, index]() {
-        return new InsertAtGenerator<T>(
-            this,
-            item,
-            index
-        );
+        return new InsertAtGenerator<T>(this,item,index);
     };
 
-    Cardinal new_length(
-        length.get_omega_count(),
-        length.get_offset() + 1
-    );
+    Cardinal new_length(length.get_omega_count(),length.get_offset() + 1);
 
-    return new LazySequence<T>(
-        factory,
-        new_length,
-        window_size
-    );
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
@@ -320,8 +295,7 @@ T LazySequence<T>::reduce(std::function<T(const T&, const T&)> reducer,T initial
 }
 
 template<class T>
-LazySequence<T>*
-LazySequence<T>::take(int count) {
+LazySequence<T>* LazySequence<T>::take(int count) {
     if(count < 0)
         throw std::out_of_range("Negative take count");
 
@@ -347,16 +321,9 @@ LazySequence<T>* LazySequence<T>::skip(int count) {
     if(new_offset < 0)
         new_offset = 0;
 
-    Cardinal new_length(
-        length.get_omega_count(),
-        new_offset
-    );
+    Cardinal new_length(length.get_omega_count(),new_offset);
 
-    return new LazySequence<T>(
-        factory,
-        new_length,
-        window_size
-    );
+    return new LazySequence<T>(factory,new_length,window_size);
 }
 
 template<class T>
@@ -384,20 +351,16 @@ LazySequence<Pair<T,T2>>* LazySequence<T>::zip(Sequence<T2>* other) {
     };
 
     Cardinal new_length;
-
     Cardinal first = this->get_length();
-
     Cardinal second = other->get_length();
 
     if(first.is_infinite() && second.is_infinite())
         new_length = Cardinal::infinity();
 
     else if(first.is_infinite())
-
         new_length = second;
 
     else if(second.is_infinite())
-
         new_length = first;
 
     else{

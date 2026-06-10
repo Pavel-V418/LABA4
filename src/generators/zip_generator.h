@@ -38,7 +38,6 @@ Pair<T1,T2> ZipGenerator<T1,T2>::get_next() {
 
 template<class T1, class T2>
 bool ZipGenerator<T1,T2>::has_next() const {
-
     Cardinal first_length = first->get_length();
     Cardinal second_length = second->get_length();
 
@@ -60,9 +59,6 @@ bool ZipGenerator<T1,T2>::has_next() const {
 
 template<class T1, class T2>
 Pair<T1,T2> ZipGenerator<T1,T2>::get(const Cardinal& index) {
-    return Pair<T1,T2>(
-        first->get(index),
-        second->get(index)
-    );
+    return Pair<T1,T2>(first->get(index),second->get(index));
 }
 #endif //LABA4_ZIP_GENERATOR_H

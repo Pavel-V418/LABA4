@@ -42,14 +42,8 @@ bool SkipGenerator<T>::has_next() const {
 }
 
 template<class T>
-T SkipGenerator<T>::get(const Cardinal& index)
-{
-    return source->get(
-        Cardinal(
-            index.get_omega_count(),
-            index.get_offset() + skip_count
-        )
-    );
+T SkipGenerator<T>::get(const Cardinal& index){
+    return source->get(Cardinal(index.get_omega_count(),index.get_offset() + skip_count));
 }
 
 #endif //LABA4_SKIP_GENERATOR_H

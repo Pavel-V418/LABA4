@@ -38,11 +38,8 @@ bool RuleGenerator<T>::has_next() const{
 }
 
 template<class T>
-T RuleGenerator<T>::get(const Cardinal&)
-{
-    throw std::logic_error(
-        "RuleGenerator does not support indexed access"
-    );
+T RuleGenerator<T>::get(const Cardinal&){
+    throw std::logic_error("RuleGenerator does not support indexed access");
 }
 
 #endif //LABA4_RULE_GENERATOR_H
