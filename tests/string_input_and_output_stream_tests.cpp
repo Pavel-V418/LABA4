@@ -191,6 +191,5 @@ TEST(StringOutputStreamTest, OpenClearsBuffer) {
 TEST(StringOutputStreamTest, WriteClosedStreamThrows) {
 
     StringOutputStream stream;
-
     EXPECT_THROW(stream.write('A'),std::logic_error);
 }
