@@ -35,3 +35,49 @@ add_executable(LABA4 src/main.cpp
         src/generators/fibonacci_generator.h
         src/generators/random_generator.h
 )
+
+
+# =========================
+# Google Test
+# =========================
+
+include(FetchContent)
+
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+# =========================
+# Tests
+# =========================
+
+add_executable(
+        LABA4_tests
+        tests/cardinal_tests.cpp
+        tests/sliding_cache_tests.cpp
+        tests/lazy_sequence_tests.cpp
+        tests/seq_input_stream_tests.cpp
+        tests/seq_output_stream_tests.cpp
+        tests/file_input_and_output_stream_test.cpp
+        tests/string_input_and_output_stream_tests.cpp
+)
+
+target_include_directories(
+        LABA4_tests
+        PRIVATE
+        src
+)
+
+target_link_libraries(
+        LABA4_tests
+        GTest::gtest_main
+)
+
+include(GoogleTest)
+
+gtest_discover_tests(LABA4_tests)

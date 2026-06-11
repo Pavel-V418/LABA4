@@ -6,6 +6,7 @@
 #include "../src/statistics/statistics_processor.h"
 #include "../src/generators/fibonacci_generator.h"
 #include "../src/generators/random_generator.h"
+#include "../src/streams/sequence_output_stream.h"
 
 // menus
 void main_menu();
@@ -13,9 +14,12 @@ void lazy_sequence_menu();
 void streams_menu();
 void statistics_menu();
 
-// streams demos
+// streams
+LazySequence<int>* create_stream_sequence();
+
 void demo_stream_read();
 void demo_stream_seek();
+void demo_stream_write();
 void demo_stream_open_close();
 
 // statistics demos
@@ -23,14 +27,12 @@ void demo_arithmetic_pipeline();
 void demo_random_pipeline();
 
 int main() {
-
     main_menu();
 
     return 0;
 }
 
 void main_menu() {
-
     bool running = true;
 
     while(running){
@@ -72,7 +74,6 @@ void main_menu() {
 }
 
 void lazy_sequence_menu() {
-
     LazySequence<int>* current_sequence = nullptr;
 
     bool running = true;
@@ -129,7 +130,6 @@ void lazy_sequence_menu() {
                 switch(generator_choice){
 
                     case 1: {
-
                         int start;
                         int step;
 
@@ -151,7 +151,6 @@ void lazy_sequence_menu() {
                     }
 
                     case 2: {
-
                         auto factory = []() {
                             return new FibonacciGenerator<int>();
                         };
@@ -164,7 +163,6 @@ void lazy_sequence_menu() {
                     }
 
                     case 3: {
-
                         int min_value;
                         int max_value;
 
@@ -194,7 +192,6 @@ void lazy_sequence_menu() {
             }
 
             case 2: {
-
                 if(current_sequence == nullptr){
 
                     std::cout << "Create sequence first.\n";
@@ -216,9 +213,7 @@ void lazy_sequence_menu() {
             }
 
             case 3: {
-
                 if(current_sequence == nullptr){
-
                     std::cout << "Create sequence first.\n";
 
                     break;
@@ -228,14 +223,12 @@ void lazy_sequence_menu() {
 
                 std::cout << "Index: ";
                 std::cin >> index;
-
                 std::cout << "Element = " << current_sequence->get(index) << std::endl;
 
                 break;
             }
 
             case 4: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -246,10 +239,8 @@ void lazy_sequence_menu() {
                 std::cout << "Take count: ";
                 std::cin >> count;
 
-                LazySequence<int>* result =
-                    current_sequence->take(count);
+                LazySequence<int>* result = current_sequence->take(count);
 
-                delete current_sequence;
                 current_sequence = result;
 
                 std::cout << "Sequence updated.\n";
@@ -258,7 +249,6 @@ void lazy_sequence_menu() {
             }
 
             case 5: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -269,10 +259,8 @@ void lazy_sequence_menu() {
                 std::cout << "Skip count: ";
                 std::cin >> skip_count;
 
-                LazySequence<int>* result =
-                    current_sequence->skip(skip_count);
+                LazySequence<int>* result = current_sequence->skip(skip_count);
 
-                delete current_sequence;
                 current_sequence = result;
 
                 std::cout << "Sequence updated.\n";
@@ -281,20 +269,15 @@ void lazy_sequence_menu() {
             }
 
             case 6: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
                 }
 
-                LazySequence<int>* mapped =
-                    current_sequence->map(
-                        [](const int& x){
+                LazySequence<int>* mapped = current_sequence->map([](const int& x){
                             return x * 2;
-                        }
-                    );
+                });
 
-                delete current_sequence;
                 current_sequence = mapped;
 
                 std::cout << "Sequence updated.\n";
@@ -303,20 +286,16 @@ void lazy_sequence_menu() {
             }
 
             case 7: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
                 }
 
-                LazySequence<int>* filtered =
-                    current_sequence->where(
-                        [](const int& x){
+                LazySequence<int>* filtered =current_sequence->where([](const int& x){
                             return x % 2 == 0;
                         }
                     );
 
-                delete current_sequence;
                 current_sequence = filtered;
 
                 std::cout << "Sequence updated.\n";
@@ -325,7 +304,6 @@ void lazy_sequence_menu() {
             }
 
             case 8: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -340,10 +318,8 @@ void lazy_sequence_menu() {
                 std::cout << "End index: ";
                 std::cin >> end;
 
-                LazySequence<int>* sub =
-                    current_sequence->get_subsequence(start,end);
+                LazySequence<int>* sub = current_sequence->get_subsequence(start,end);
 
-                delete current_sequence;
                 current_sequence = sub;
 
                 std::cout << "Sequence updated.\n";
@@ -352,7 +328,6 @@ void lazy_sequence_menu() {
             }
 
             case 9: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -363,8 +338,7 @@ void lazy_sequence_menu() {
                 std::cout << "Append value: ";
                 std::cin >> value;
 
-                LazySequence<int>* result =
-                    current_sequence->append(value);
+                LazySequence<int>* result = current_sequence->append(value);
 
                 current_sequence = result;
 
@@ -374,7 +348,6 @@ void lazy_sequence_menu() {
             }
 
             case 10: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -424,7 +397,6 @@ void lazy_sequence_menu() {
             }
 
             case 12: {
-
                 if(current_sequence == nullptr){
                     std::cout << "Create sequence first.\n";
                     break;
@@ -443,7 +415,7 @@ void lazy_sequence_menu() {
                     return new StreamNumberGenerator<int>(start, step);
                 };
 
-                auto* second = new LazySequence<int> (factory,Cardinal::infinity(),100);
+                auto* second = new LazySequence <int> (factory,Cardinal::infinity(),100);
 
                 current_sequence = current_sequence->concat(second);
 
@@ -469,7 +441,6 @@ void lazy_sequence_menu() {
                 std::cin >> offset;
 
                 try{
-
                     Cardinal index(omega, offset);
 
                     std::cout
@@ -546,11 +517,12 @@ void streams_menu() {
 
     while(running){
 
-        std::cout << "STREAMS MENU\n";
+        std::cout << "\nSTREAMS MENU\n";
 
         std::cout << "1. Read stream\n";
         std::cout << "2. Seek stream\n";
         std::cout << "3. Open / Close stream\n";
+        std::cout << "4. Write stream\n";
         std::cout << "0. Back\n";
 
         int choice;
@@ -558,39 +530,125 @@ void streams_menu() {
         std::cout << "Choice: ";
         std::cin >> choice;
 
-        switch(choice){
+        try{
 
-            case 1:
-                demo_stream_read();
-                break;
+            switch(choice){
 
-            case 2:
-                demo_stream_seek();
-                break;
+                case 1:
+                    demo_stream_read();
+                    break;
 
-            case 3:
-                demo_stream_open_close();
-                break;
+                case 2:
+                    demo_stream_seek();
+                    break;
 
-            case 0:
-                running = false;
-                break;
+                case 3:
+                    demo_stream_open_close();
+                    break;
 
-            default:
-                std::cout << "Invalid choice\n";
+                case 4:
+                    demo_stream_write();
+                    break;
+
+                case 0:
+                    running = false;
+                    break;
+
+                default:
+                    std::cout << "Invalid choice\n";
+            }
         }
+        catch(const std::exception& e){
+
+            std::cout
+                << "Error: "
+                << e.what()
+                << std::endl;
+        }
+    }
+}
+
+LazySequence<int>* create_stream_sequence() {
+
+    std::cout << "\nChoose generator:\n";
+
+    std::cout << "1. Arithmetic progression\n";
+    std::cout << "2. Fibonacci\n";
+    std::cout << "3. Random\n";
+
+    int choice;
+
+    std::cout << "Choice: ";
+    std::cin >> choice;
+
+    switch(choice){
+
+        case 1: {
+
+            int start;
+            int step;
+
+            std::cout << "Start value: ";
+            std::cin >> start;
+
+            std::cout << "Step: ";
+            std::cin >> step;
+
+            auto factory = [start, step]() {
+                return new StreamNumberGenerator<int>(start, step);
+            };
+
+            return new LazySequence<int>(factory,Cardinal::infinity(),100);
+        }
+
+        case 2: {
+
+            auto factory = []() {
+                return new FibonacciGenerator<int>();
+            };
+
+            return new LazySequence<int>(factory,Cardinal::infinity(),100);
+        }
+
+        case 3: {
+
+            int min_value;
+            int max_value;
+
+            std::cout << "Minimum value: ";
+            std::cin >> min_value;
+
+            std::cout << "Maximum value: ";
+            std::cin >> max_value;
+
+            auto factory = [min_value, max_value]() {
+                return new RandomGenerator<int>(
+                    min_value,
+                    max_value
+                );
+            };
+
+            return new LazySequence<int>(
+                factory,
+                Cardinal::infinity(),
+                100
+            );
+        }
+
+        default:
+            throw std::logic_error(
+                "Invalid generator type"
+            );
     }
 }
 
 void demo_stream_read() {
 
-    auto factory = []() {
-        return new StreamNumberGenerator<int>(1,1);
-    };
+    LazySequence<int>* sequence =
+        create_stream_sequence();
 
-    LazySequence<int> sequence(factory, Cardinal::infinity(),100);
+    SequenceInputStream<int> stream(sequence);
 
-    SequenceInputStream<int> stream(&sequence);
     stream.open();
 
     int count;
@@ -604,17 +662,16 @@ void demo_stream_read() {
     std::cout << std::endl;
 
     stream.close();
+
+    delete sequence;
 }
 
 void demo_stream_seek() {
 
-    auto factory = []() {
-        return new StreamNumberGenerator<int>(1,1);
-    };
+    LazySequence<int>* sequence =
+        create_stream_sequence();
 
-    LazySequence<int> sequence(factory, Cardinal::infinity(), 100);
-
-    SequenceInputStream<int> stream(&sequence);
+    SequenceInputStream<int> stream(sequence);
 
     stream.open();
 
@@ -625,30 +682,75 @@ void demo_stream_seek() {
 
     stream.seek(position);
 
-    std::cout << "Value = "<< stream.read()<< std::endl;
+    std::cout
+        << "Value = "
+        << stream.read()
+        << std::endl;
 
     stream.close();
+
+    delete sequence;
 }
 
 void demo_stream_open_close() {
 
-    auto factory = []() {
-        return new StreamNumberGenerator<int>(1,1);
-    };
+    LazySequence<int>* sequence =
+        create_stream_sequence();
 
-    LazySequence<int> sequence(factory,Cardinal::infinity(),100);
-    SequenceInputStream<int> stream(&sequence);
+    SequenceInputStream<int> stream(sequence);
 
     std::cout << "Opening stream...\n";
 
     stream.open();
 
-    std::cout << "Reading value: "<< stream.read()<< std::endl;
+    std::cout
+        << "Reading value: "
+        << stream.read()
+        << std::endl;
+
     std::cout << "Closing stream...\n";
 
     stream.close();
 
     std::cout << "Stream closed.\n";
+
+    delete sequence;
+}
+
+void demo_stream_write() {
+
+    MutableArraySequence<int> sequence;
+
+    SequenceOutputStream<int> stream(&sequence);
+
+    stream.open();
+
+    int count;
+
+    std::cout << "Elements count: ";
+    std::cin >> count;
+
+    for(int i = 0; i < count; i++) {
+
+        int value;
+
+        std::cout << "Value #" << i + 1 << ": ";
+        std::cin >> value;
+
+        stream.write(value);
+    }
+
+    stream.close();
+
+    Sequence<int>* result =
+        stream.get_target();
+
+    std::cout << "\nStored values:\n";
+
+    for(int i = 0; i < result->get_length().get_offset(); i++)
+        std::cout << result->get(i) << " ";
+
+    std::cout << std::endl;
 }
 
 void statistics_menu() {

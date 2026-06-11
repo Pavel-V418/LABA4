@@ -25,6 +25,8 @@ public:
     int get_position() const override;
 
     void write(const T& item) override;
+
+    Sequence<T>* get_target() const;
 };
 
 template<class T>
@@ -59,6 +61,11 @@ void SequenceOutputStream<T>::write(const T& item) {
     target = target->append(item);
 
     position++;
+}
+
+template<class T>
+Sequence<T>* SequenceOutputStream<T>:: get_target() const {
+    return target;
 }
 
 #endif //LABA4_WRITE_ONLY_STREAM_H
